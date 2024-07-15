@@ -232,9 +232,6 @@ def one_chunk_translate_text(model, source_text):
     total_tokens = input_tokens + output_tokens
     estimated_cost_usd, estimated_cost_ntd = estimate_cost(input_tokens, output_tokens)
 
-def one_chunk_translate_text(model, source_text):
-    # ... [前面的代码保持不变] ...
-
     st.write("Token Usage and Cost Estimation:")
     st.write(f"Total tokens used: {total_tokens}")
     st.write(f"Input tokens: {input_tokens}")
