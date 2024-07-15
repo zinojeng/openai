@@ -194,16 +194,14 @@ Please take into account the expert suggestions when editing the translation. Ed
 (iv) terminology (inappropriate for context, inconsistent use), or
 (v) other errors.
 
-Provide your improved translation in the following format:
+Provide your improved translation for EVERY sentence or logical unit of the text in the following format:
 [SOURCE] Original sentence 1
 [TARGET] Improved translation of sentence 1
 
 [SOURCE] Original sentence 2
 [TARGET] Improved translation of sentence 2
 
-... and so on for each sentence or logical unit of the text.
-
-After providing the sentence-by-sentence translation, please also provide a full, continuous improved translation of the entire text."""
+... and so on for each sentence or logical unit of the text. Make sure to include ALL sentences from the original text."""
 
     return get_completion(prompt, system_message, model=model)
 
@@ -219,13 +217,21 @@ def one_chunk_translate_text(model, source_text):
     st.subheader("Improved Translation")
     improved_translation = one_chunk_improve_translation(model, source_text, translation_1, reflection)
     
-    # 分離逐句翻譯和完整翻譯
-    sentence_translations, full_translation = improved_translation.split("\n\n", 1)
-    
     # 處理逐句翻譯
-    pairs = re.split(r'\[SOURCE\]|\[TARGET\]', sentence_translations)
+    pairs = re.split(r'\[SOURCE\]|\[TARGET\]', improved_translation)
     pairs = [pair.strip() for pair in pairs if pair.strip()]
-
+    
+    # 使用 st.table 來展示原文和翻譯
+    data = []
+    for i in range(0, len(pairs), 2):
+        if i+1 < len(pairs):
+            data.append({"Original": pairs[i], "Translation": pairs[i+1]})
+    
+    if data:
+        st.table(data)
+    else:
+        st.write("No improved translation pairs found.")
+    
     # 計算 token 數量和成本
     input_tokens = estimate_token_count(source_text)
     output_tokens = estimate_token_count(translation_1) + estimate_token_count(reflection) + estimate_token_count(improved_translation)
@@ -237,20 +243,8 @@ def one_chunk_translate_text(model, source_text):
     st.write(f"Input tokens: {input_tokens}")
     st.write(f"Output tokens: {output_tokens}")
     st.write(f"Estimated cost: NTD {estimated_cost:.2f}")
-    
-    # 使用 st.table 來展示原文和翻譯
-    data = []
-    for i in range(0, len(pairs), 2):
-        if i+1 < len(pairs):
-            data.append({"Original": pairs[i], "Translation": pairs[i+1]})
-    
-    st.subheader("Sentence-by-Sentence Translation")
-    st.table(data)
-    
-    st.subheader("Full Improved Translation")
-    st.write(full_translation)
-    
-    return full_translation
+
+    return improved_translation
 
 # Translate button
 if st.button("Translate"):
