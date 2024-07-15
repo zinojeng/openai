@@ -23,10 +23,6 @@ if openai_api_key:
 st.header("Select Languages")
 col1, col2, col3 = st.columns(3)
 
-# Language selection
-st.header("Select Languages")
-col1, col2, col3 = st.columns(3)
-
 with col1:
     source_lang = st.selectbox(
         "Source Language",
