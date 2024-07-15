@@ -19,9 +19,6 @@ openai_api_key = st.sidebar.text_input(
 if openai_api_key:
     os.environ["OPENAI_API_KEY"] = openai_api_key
 
-# Main content
-st.title("Translation Agent")
-
 # Language selection
 st.header("Select Languages")
 col1, col2, col3 = st.columns(3)
