@@ -3,6 +3,7 @@ import os
 from litellm import completion
 import PyPDF2
 import io
+from docx import Document
 
 # Set page config
 st.set_page_config(page_title="Translation Agent", layout="wide")
@@ -26,13 +27,13 @@ col1, col2, col3 = st.columns(3)
 with col1:
     source_lang = st.selectbox(
         "Source Language",
-        ["English", "Chinese", "Spanish", "French", "German", "Italian", "Japanese", "Korean", "Vietnamese", "Indonesian"]
+        ["English", "Chinese", "Spanish", "French", "German", "Italian", "Japanese", "Korean", "Vietnamese", "Indonesian", "Thai"]
     )
 
 with col2:
     target_lang = st.selectbox(
         "Target Language",
-        ["Traditional Chinese", "Simplified Chinese", "English", "Spanish", "French", "German", "Italian", "Japanese", "Korean", "Vietnamese", "Indonesian"]
+        ["Traditional Chinese", "Simplified Chinese", "English", "Spanish", "French", "German", "Italian", "Japanese", "Korean", "Vietnamese", "Indonesian", "Thai"]
     )
 
 with col3:
@@ -47,12 +48,13 @@ with col3:
         "Japanese": ["Japan"],
         "Korean": ["South Korea"],
         "Vietnamese": ["Vietnam"],
-        "Indonesian": ["Indonesia"]
+        "Indonesian": ["Indonesia"],
+        "Thai": ["Thailand"]
     }
     country = st.selectbox("Country/Region", country_options.get(target_lang, []))
 
 # Input method selection
-input_method = st.radio("Choose input method:", ("Upload PDF", "Upload TXT", "Enter Text"))
+input_method = st.radio("Choose input method:", ("Upload PDF", "Upload TXT", "Upload Word Document", "Enter Text"))
 
 # Function to read PDF
 def read_pdf(file):
@@ -65,6 +67,14 @@ def read_pdf(file):
 # Function to read TXT
 def read_txt(file):
     return file.getvalue().decode("utf-8")
+
+# Function to read Word Document
+def read_docx(file):
+    doc = Document(file)
+    full_text = []
+    for para in doc.paragraphs:
+        full_text.append(para.text)
+    return '\n'.join(full_text)
 
 # Input text based on selected method
 if input_method == "Upload PDF":

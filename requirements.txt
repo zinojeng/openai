@@ -1,3 +1,4 @@
 streamlit==1.26.0
 litellm
 PyPDF2==3.0.1
+python-docx
