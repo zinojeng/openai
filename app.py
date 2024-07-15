@@ -280,35 +280,29 @@ if st.button("Translate"):
                 result = one_chunk_translate_text("gpt-4o", source_text)
             st.success("Translation completed!")
             
-            # 下載按鈕
-            result_text = rf"""Source Text:
-{source_text}
+# 下載按鈕
+result_text = (
+    f"Source Text:\n{source_text}\n\n"
+    f"Initial Translation:\n{result['initial_translation']}\n\n"
+    f"Translation Reflection:\n{result['reflection']}\n\n"
+    f"Improved Translation:\n{result['improved_translation']}\n\n"
+    "Sentence-by-Sentence Comparison:\n"
+)
 
-Initial Translation:
-{result['initial_translation']}
+for pair in result['sentence_pairs']:
+    result_text += f"Original: {pair['Original']}\nTranslation: {pair['Translation']}\n\n"
 
-Translation Reflection:
-{result['reflection']}
+result_text += (
+    f"Token Usage:\n"
+    f"Total tokens: {result['total_tokens']}\n"
+    f"Input tokens: {result['input_tokens']}\n"
+    f"Output tokens: {result['output_tokens']}\n\n"
+    f"Estimated Cost: NTD {result['estimated_cost']:.2f}\n"
+)
 
-Improved Translation:
-{result['improved_translation']}
-
-Sentence-by-Sentence Comparison:
-{"".join([f"Original: {pair['Original']}\nTranslation: {pair['Translation']}\n\n" for pair in result['sentence_pairs']])}
-
-Token Usage:
-Total tokens: {result['total_tokens']}
-Input tokens: {result['input_tokens']}
-Output tokens: {result['output_tokens']}
-
-Estimated Cost: NTD {result['estimated_cost']:.2f}
-"""
-            st.download_button(
-                label="Download Translation Results",
-                data=result_text,
-                file_name="translation_results.txt",
-                mime="text/plain"
-            )
-        except Exception as e:
-            st.error(f"An error occurred during translation: {str(e)}")
-            st.error("Please check your input and try again.")
+st.download_button(
+    label="Download Translation Results",
+    data=result_text,
+    file_name="translation_results.txt",
+    mime="text/plain"
+)
