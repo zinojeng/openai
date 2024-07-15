@@ -4,6 +4,9 @@ from litellm import completion
 import PyPDF2
 import io
 from docx import Document
+import re
+import tiktoken
+
 
 # Set page config
 st.set_page_config(page_title="Translation Agent", layout="wide")
@@ -101,6 +104,23 @@ elif input_method == "Upload Word Document":
 else:  # Enter Text
     source_text = st.text_area("Enter the text to translate:", height=200)
 
+def estimate_token_count(text):
+    encoding = tiktoken.encoding_for_model("gpt-4")
+    return len(encoding.encode(text))
+
+def estimate_cost(input_tokens, output_tokens, use_batch_api=False):
+    if use_batch_api:
+        input_cost = (input_tokens / 1_000_000) * 2.50
+        output_cost = (output_tokens / 1_000_000) * 7.50
+    else:
+        input_cost = (input_tokens / 1_000_000) * 5.00
+        output_cost = (output_tokens / 1_000_000) * 15.00
+    total_cost_usd = input_cost + output_cost
+    # 假設 1 USD = 30 NTD，您可以根據實際匯率調整
+    total_cost_ntd = total_cost_usd * 30
+    return total_cost_ntd
+
+
 # Translation functions
 def get_completion(user_prompt, system_message="You are a helpful assistant.", model="gpt-4o", temperature=0.3):
     messages = [
@@ -174,8 +194,63 @@ Please take into account the expert suggestions when editing the translation. Ed
 (iv) terminology (inappropriate for context, inconsistent use), or
 (v) other errors.
 
-Output only the new translation and nothing else."""
+Provide your improved translation in the following format:
+[SOURCE] Original sentence 1
+[TARGET] Improved translation of sentence 1
+
+[SOURCE] Original sentence 2
+[TARGET] Improved translation of sentence 2
+
+... and so on for each sentence or logical unit of the text.
+
+After providing the sentence-by-sentence translation, please also provide a full, continuous improved translation of the entire text."""
+
     return get_completion(prompt, system_message, model=model)
+
+def one_chunk_translate_text(model, source_text):
+    st.subheader("Initial Translation")
+    translation_1 = one_chunk_initial_translation(model, source_text)
+    st.write(translation_1)
+
+    st.subheader("Translation Reflection")
+    reflection = one_chunk_reflect_on_translation(model, source_text, translation_1)
+    st.write(reflection)
+
+    st.subheader("Improved Translation")
+    improved_translation = one_chunk_improve_translation(model, source_text, translation_1, reflection)
+    
+    # 分離逐句翻譯和完整翻譯
+    sentence_translations, full_translation = improved_translation.split("\n\n", 1)
+    
+    # 處理逐句翻譯
+    pairs = re.split(r'\[SOURCE\]|\[TARGET\]', sentence_translations)
+    pairs = [pair.strip() for pair in pairs if pair.strip()]
+
+    # 計算 token 數量和成本
+    input_tokens = estimate_token_count(source_text)
+    output_tokens = estimate_token_count(translation_1) + estimate_token_count(reflection) + estimate_token_count(improved_translation)
+    total_tokens = input_tokens + output_tokens
+    estimated_cost = estimate_cost(input_tokens, output_tokens)
+
+    st.subheader("Token Usage and Cost Estimation")
+    st.write(f"Total tokens used: {total_tokens}")
+    st.write(f"Input tokens: {input_tokens}")
+    st.write(f"Output tokens: {output_tokens}")
+    st.write(f"Estimated cost: NTD {estimated_cost:.2f}")
+    
+    # 使用 st.table 來展示原文和翻譯
+    data = []
+    for i in range(0, len(pairs), 2):
+        if i+1 < len(pairs):
+            data.append({"Original": pairs[i], "Translation": pairs[i+1]})
+    
+    st.subheader("Sentence-by-Sentence Translation")
+    st.table(data)
+    
+    st.subheader("Full Improved Translation")
+    st.write(full_translation)
+    
+    return full_translation
 
 # Translate button
 if st.button("Translate"):
@@ -185,16 +260,6 @@ if st.button("Translate"):
         st.error("Please provide some text to translate.")
     else:
         with st.spinner("Translating..."):
-            st.subheader("Initial Translation")
-            translation_1 = one_chunk_initial_translation("gpt-4o", source_text)
-            st.write(translation_1)
-
-            st.subheader("Translation Reflection")
-            reflection = one_chunk_reflect_on_translation("gpt-4o", source_text, translation_1)
-            st.write(reflection)
-
-            st.subheader("Improved Translation")
-            translation_2 = one_chunk_improve_translation("gpt-4o", source_text, translation_1, reflection)
-            st.write(translation_2)
+            result = one_chunk_translate_text("gpt-4o", source_text)
 
         st.success("Translation completed!")
