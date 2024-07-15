@@ -7,6 +7,17 @@ from docx import Document
 import re
 import tiktoken
 
+import nltk
+import ssl
+
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
+
+nltk.download('punkt', quiet=True)
 
 # Set page config
 st.set_page_config(page_title="Translation Agent", layout="wide")
@@ -198,6 +209,22 @@ Provide your improved translation as a continuous text, without any additional f
 
     return get_completion(prompt, system_message, model=model)
 
+def create_sentence_pairs(source_text, translated_text):
+    source_sentences = sent_tokenize(source_text)
+    translated_sentences = sent_tokenize(translated_text)
+    
+    # 確保兩個列表長度相同
+    min_length = min(len(source_sentences), len(translated_sentences))
+    
+    pairs = []
+    for i in range(min_length):
+        source = source_sentences[i].strip()
+        translation = translated_sentences[i].strip()
+        if source and translation:  # 確保兩者都不為空
+            pairs.append({"Original": source, "Translation": translation})
+    
+    return pairs
+
 def one_chunk_translate_text(model, source_text):
     st.subheader("Initial Translation")
     translation_1 = one_chunk_initial_translation(model, source_text)
@@ -212,16 +239,13 @@ def one_chunk_translate_text(model, source_text):
     st.write(improved_translation)
 
     st.subheader("Sentence-by-Sentence Comparison")
-    # 處理逐句翻譯
     sentence_pairs = create_sentence_pairs(source_text, improved_translation)
     
-    # 使用 st.table 來展示原文和翻譯
     if sentence_pairs:
         st.table(sentence_pairs)
     else:
         st.write("No sentence pairs could be generated.")
     
-    # 計算 token 數量和成本
     input_tokens = estimate_token_count(source_text)
     output_tokens = estimate_token_count(translation_1) + estimate_token_count(reflection) + estimate_token_count(improved_translation)
     total_tokens = input_tokens + output_tokens
@@ -233,24 +257,16 @@ def one_chunk_translate_text(model, source_text):
     st.write(f"Output tokens: {output_tokens}")
     st.write(f"Estimated cost: NTD {estimated_cost:.2f}")
 
-    return improved_translation
-
-def create_sentence_pairs(source_text, translated_text):
-    # 使用簡單的句點分割，可能需要更複雜的邏輯來處理不同的語言
-    source_sentences = source_text.split('.')
-    translated_sentences = translated_text.split('.')
-    
-    # 確保兩個列表長度相同
-    min_length = min(len(source_sentences), len(translated_sentences))
-    
-    pairs = []
-    for i in range(min_length):
-        source = source_sentences[i].strip()
-        translation = translated_sentences[i].strip()
-        if source and translation:  # 確保兩者都不為空
-            pairs.append({"Original": source + '.', "Translation": translation + '.'})
-    
-    return pairs
+    return {
+        "initial_translation": translation_1,
+        "reflection": reflection,
+        "improved_translation": improved_translation,
+        "sentence_pairs": sentence_pairs,
+        "total_tokens": total_tokens,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "estimated_cost": estimated_cost
+    }
 
 # Translate button
 if st.button("Translate"):
@@ -277,6 +293,9 @@ Translation Reflection:
 Improved Translation:
 {result['improved_translation']}
 
+Sentence-by-Sentence Comparison:
+{"".join([f"Original: {pair['Original']}\nTranslation: {pair['Translation']}\n\n" for pair in result['sentence_pairs']])}
+
 Token Usage:
 Total tokens: {result['total_tokens']}
 Input tokens: {result['input_tokens']}
@@ -292,3 +311,4 @@ Estimated Cost: NTD {result['estimated_cost']:.2f}
             )
         except Exception as e:
             st.error(f"An error occurred during translation: {str(e)}")
+            st.error("Please check your input and try again.")

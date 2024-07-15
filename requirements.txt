@@ -2,3 +2,5 @@ streamlit==1.26.0
 litellm
 PyPDF2==3.0.1
 python-docx
+tiktoken
+nltk==3.8.1
