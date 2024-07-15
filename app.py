@@ -6,7 +6,6 @@ import io
 from docx import Document
 import re
 import tiktoken
-from nltk.tokenize import sent_tokenize
 import nltk
 import ssl
 
@@ -18,6 +17,14 @@ else:
     ssl._create_default_https_context = _create_unverified_https_context
 
 nltk.download('punkt', quiet=True)
+
+# Token pricing constants
+GPT4_INPUT_PRICE = 5.00  # USD per 1M tokens
+GPT4_OUTPUT_PRICE = 15.00  # USD per 1M tokens
+GPT4_BATCH_INPUT_PRICE = 2.50  # USD per 1M tokens
+GPT4_BATCH_OUTPUT_PRICE = 7.50  # USD per 1M tokens
+USD_TO_NTD = 30  # 假设汇率，您可以根据实际情况调整
+
 
 # Set page config
 st.set_page_config(page_title="Translation Agent", layout="wide")
@@ -116,21 +123,19 @@ else:  # Enter Text
     source_text = st.text_area("Enter the text to translate:", height=200)
 
 def estimate_token_count(text):
-    encoding = tiktoken.encoding_for_model("gpt-4")
+    encoding = tiktoken.encoding_for_model("gpt-4o")
     return len(encoding.encode(text))
 
 def estimate_cost(input_tokens, output_tokens, use_batch_api=False):
     if use_batch_api:
-        input_cost = (input_tokens / 1_000_000) * 2.50
-        output_cost = (output_tokens / 1_000_000) * 7.50
+        input_cost = (input_tokens / 1_000_000) * GPT4_BATCH_INPUT_PRICE
+        output_cost = (output_tokens / 1_000_000) * GPT4_BATCH_OUTPUT_PRICE
     else:
-        input_cost = (input_tokens / 1_000_000) * 5.00
-        output_cost = (output_tokens / 1_000_000) * 15.00
+        input_cost = (input_tokens / 1_000_000) * GPT4_INPUT_PRICE
+        output_cost = (output_tokens / 1_000_000) * GPT4_OUTPUT_PRICE
     total_cost_usd = input_cost + output_cost
-    # 假設 1 USD = 30 NTD，您可以根據實際匯率調整
-    total_cost_ntd = total_cost_usd * 30
-    return total_cost_ntd
-
+    total_cost_ntd = total_cost_usd * USD_TO_NTD
+    return total_cost_usd, total_cost_ntd
 
 # Translation functions
 def get_completion(user_prompt, system_message="You are a helpful assistant.", model="gpt-4o", temperature=0.3):
@@ -209,23 +214,6 @@ Provide your improved translation as a continuous text, without any additional f
 
     return get_completion(prompt, system_message, model=model)
 
-def create_sentence_pairs(source_text, translated_text):
-    # 使用 NLTK 的 sent_tokenize 进行更准确的句子分割
-    source_sentences = sent_tokenize(source_text)
-    translated_sentences = sent_tokenize(translated_text)
-    
-    # 确保两个列表长度相同
-    min_length = min(len(source_sentences), len(translated_sentences))
-    
-    pairs = []
-    for i in range(min_length):
-        source = source_sentences[i].strip()
-        translation = translated_sentences[i].strip()
-        if source and translation:  # 确保两者都不为空
-            pairs.append({"Original": source, "Translation": translation})
-    
-    return pairs
-
 def one_chunk_translate_text(model, source_text):
     st.subheader("Initial Translation")
     translation_1 = one_chunk_initial_translation(model, source_text)
@@ -239,37 +227,37 @@ def one_chunk_translate_text(model, source_text):
     improved_translation = one_chunk_improve_translation(model, source_text, translation_1, reflection)
     st.write(improved_translation)
 
-    st.subheader("Sentence-by-Sentence Comparison")
-    sentence_pairs = create_sentence_pairs(source_text, improved_translation)
-    
-    if sentence_pairs:
-        for pair in sentence_pairs:
-            st.write("Original: " + pair["Original"])
-            st.write("Translation: " + pair["Translation"])
-            st.write("---")  # 添加分隔线
-    else:
-        st.write("No sentence pairs could be generated.")
-    
     input_tokens = estimate_token_count(source_text)
     output_tokens = estimate_token_count(translation_1) + estimate_token_count(reflection) + estimate_token_count(improved_translation)
     total_tokens = input_tokens + output_tokens
-    estimated_cost = estimate_cost(input_tokens, output_tokens)
+    estimated_cost_usd, estimated_cost_ntd = estimate_cost(input_tokens, output_tokens)
 
     st.subheader("Token Usage and Cost Estimation")
     st.write(f"Total tokens used: {total_tokens}")
     st.write(f"Input tokens: {input_tokens}")
     st.write(f"Output tokens: {output_tokens}")
-    st.write(f"Estimated cost: NTD {estimated_cost:.2f}")
+    st.write(f"Estimated cost: USD {estimated_cost_usd:.2f} / NTD {estimated_cost_ntd:.2f}")
+    
+    st.write("Token Pricing:")
+    st.write("""
+    **Model**: gpt-4o
+    **Standard Pricing**:
+    - Input tokens: US${:.2f} / 1M tokens
+    - Output tokens: US${:.2f} / 1M tokens
+    **Pricing with Batch API**:
+    - Input tokens: US${:.2f} / 1M tokens
+    - Output tokens: US${:.2f} / 1M tokens
+    """.format(GPT4_INPUT_PRICE, GPT4_OUTPUT_PRICE, GPT4_BATCH_INPUT_PRICE, GPT4_BATCH_OUTPUT_PRICE))
 
     return {
         "initial_translation": translation_1,
         "reflection": reflection,
         "improved_translation": improved_translation,
-        "sentence_pairs": sentence_pairs,
         "total_tokens": total_tokens,
         "input_tokens": input_tokens,
         "output_tokens": output_tokens,
-        "estimated_cost": estimated_cost
+        "estimated_cost_usd": estimated_cost_usd,
+        "estimated_cost_ntd": estimated_cost_ntd
     }
 
 # Translate button
@@ -290,13 +278,6 @@ if st.button("Translate"):
                 f"Initial Translation:\n{result['initial_translation']}\n\n"
                 f"Translation Reflection:\n{result['reflection']}\n\n"
                 f"Improved Translation:\n{result['improved_translation']}\n\n"
-                "Sentence-by-Sentence Comparison:\n"
-            )
-
-            for pair in result['sentence_pairs']:
-                result_text += f"Original: {pair['Original']}\nTranslation: {pair['Translation']}\n\n"
-            
-            result_text += (
                 f"Token Usage:\n"
                 f"Total tokens: {result['total_tokens']}\n"
                 f"Input tokens: {result['input_tokens']}\n"
