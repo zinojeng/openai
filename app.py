@@ -91,6 +91,13 @@ elif input_method == "Upload TXT":
         st.text_area("Extracted text from TXT:", value=source_text, height=200)
     else:
         source_text = ""
+elif input_method == "Upload Word Document":
+    uploaded_file = st.file_uploader("Choose a Word Document", type=["doc", "docx"])
+    if uploaded_file is not None:
+        source_text = read_docx(uploaded_file)
+        st.text_area("Extracted text from Word Document:", value=source_text, height=200)
+    else:
+        source_text = ""
 else:  # Enter Text
     source_text = st.text_area("Enter the text to translate:", height=200)
 
