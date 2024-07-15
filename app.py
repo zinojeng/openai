@@ -281,7 +281,7 @@ if st.button("Translate"):
             st.success("Translation completed!")
             
             # 下載按鈕
-            result_text = f"""Source Text:
+            result_text = rf"""Source Text:
 {source_text}
 
 Initial Translation:
