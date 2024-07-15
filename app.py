@@ -6,7 +6,7 @@ import io
 from docx import Document
 import re
 import tiktoken
-
+from nltk.tokenize import sent_tokenize
 import nltk
 import ssl
 
@@ -210,18 +210,19 @@ Provide your improved translation as a continuous text, without any additional f
     return get_completion(prompt, system_message, model=model)
 
 def create_sentence_pairs(source_text, translated_text):
-    source_sentences = sent_tokenize(source_text)
-    translated_sentences = sent_tokenize(translated_text)
+    # 使用简单的句号分割，这可能不适用于所有语言
+    source_sentences = source_text.split('.')
+    translated_sentences = translated_text.split('.')
     
-    # 確保兩個列表長度相同
+    # 确保两个列表长度相同
     min_length = min(len(source_sentences), len(translated_sentences))
     
     pairs = []
     for i in range(min_length):
         source = source_sentences[i].strip()
         translation = translated_sentences[i].strip()
-        if source and translation:  # 確保兩者都不為空
-            pairs.append({"Original": source, "Translation": translation})
+        if source and translation:  # 确保两者都不为空
+            pairs.append({"Original": source + '.', "Translation": translation + '.'})
     
     return pairs
 
