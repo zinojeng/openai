@@ -194,14 +194,7 @@ Please take into account the expert suggestions when editing the translation. Ed
 (iv) terminology (inappropriate for context, inconsistent use), or
 (v) other errors.
 
-Provide your improved translation for EVERY sentence or logical unit of the text in the following format:
-[SOURCE] Original sentence 1
-[TARGET] Improved translation of sentence 1
-
-[SOURCE] Original sentence 2
-[TARGET] Improved translation of sentence 2
-
-... and so on for each sentence or logical unit of the text. Make sure to include ALL sentences from the original text."""
+Provide your improved translation as a continuous text, without any additional formatting or labels."""
 
     return get_completion(prompt, system_message, model=model)
 
@@ -216,21 +209,17 @@ def one_chunk_translate_text(model, source_text):
 
     st.subheader("Improved Translation")
     improved_translation = one_chunk_improve_translation(model, source_text, translation_1, reflection)
-    
+    st.write(improved_translation)
+
+    st.subheader("Sentence-by-Sentence Comparison")
     # 處理逐句翻譯
-    pairs = re.split(r'\[SOURCE\]|\[TARGET\]', improved_translation)
-    pairs = [pair.strip() for pair in pairs if pair.strip()]
+    sentence_pairs = create_sentence_pairs(source_text, improved_translation)
     
     # 使用 st.table 來展示原文和翻譯
-    data = []
-    for i in range(0, len(pairs), 2):
-        if i+1 < len(pairs):
-            data.append({"Original": pairs[i], "Translation": pairs[i+1]})
-    
-    if data:
-        st.table(data)
+    if sentence_pairs:
+        st.table(sentence_pairs)
     else:
-        st.write("No improved translation pairs found.")
+        st.write("No sentence pairs could be generated.")
     
     # 計算 token 數量和成本
     input_tokens = estimate_token_count(source_text)
@@ -246,6 +235,23 @@ def one_chunk_translate_text(model, source_text):
 
     return improved_translation
 
+def create_sentence_pairs(source_text, translated_text):
+    # 使用簡單的句點分割，可能需要更複雜的邏輯來處理不同的語言
+    source_sentences = source_text.split('.')
+    translated_sentences = translated_text.split('.')
+    
+    # 確保兩個列表長度相同
+    min_length = min(len(source_sentences), len(translated_sentences))
+    
+    pairs = []
+    for i in range(min_length):
+        source = source_sentences[i].strip()
+        translation = translated_sentences[i].strip()
+        if source and translation:  # 確保兩者都不為空
+            pairs.append({"Original": source + '.', "Translation": translation + '.'})
+    
+    return pairs
+
 # Translate button
 if st.button("Translate"):
     if not openai_api_key:
@@ -253,7 +259,36 @@ if st.button("Translate"):
     elif not source_text:
         st.error("Please provide some text to translate.")
     else:
-        with st.spinner("Translating..."):
-            result = one_chunk_translate_text("gpt-4o", source_text)
+        try:
+            with st.spinner("Translating... This may take a moment."):
+                result = one_chunk_translate_text("gpt-4o", source_text)
+            st.success("Translation completed!")
+            
+            # 下載按鈕
+            result_text = f"""Source Text:
+{source_text}
 
-        st.success("Translation completed!")
+Initial Translation:
+{result['initial_translation']}
+
+Translation Reflection:
+{result['reflection']}
+
+Improved Translation:
+{result['improved_translation']}
+
+Token Usage:
+Total tokens: {result['total_tokens']}
+Input tokens: {result['input_tokens']}
+Output tokens: {result['output_tokens']}
+
+Estimated Cost: NTD {result['estimated_cost']:.2f}
+"""
+            st.download_button(
+                label="Download Translation Results",
+                data=result_text,
+                file_name="translation_results.txt",
+                mime="text/plain"
+            )
+        except Exception as e:
+            st.error(f"An error occurred during translation: {str(e)}")
