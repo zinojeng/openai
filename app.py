@@ -210,9 +210,9 @@ Provide your improved translation as a continuous text, without any additional f
     return get_completion(prompt, system_message, model=model)
 
 def create_sentence_pairs(source_text, translated_text):
-    # 使用简单的句号分割，这可能不适用于所有语言
-    source_sentences = source_text.split('.')
-    translated_sentences = translated_text.split('.')
+    # 使用 NLTK 的 sent_tokenize 进行更准确的句子分割
+    source_sentences = sent_tokenize(source_text)
+    translated_sentences = sent_tokenize(translated_text)
     
     # 确保两个列表长度相同
     min_length = min(len(source_sentences), len(translated_sentences))
@@ -222,7 +222,7 @@ def create_sentence_pairs(source_text, translated_text):
         source = source_sentences[i].strip()
         translation = translated_sentences[i].strip()
         if source and translation:  # 确保两者都不为空
-            pairs.append({"Original": source + '.', "Translation": translation + '.'})
+            pairs.append({"Original": source, "Translation": translation})
     
     return pairs
 
@@ -243,7 +243,10 @@ def one_chunk_translate_text(model, source_text):
     sentence_pairs = create_sentence_pairs(source_text, improved_translation)
     
     if sentence_pairs:
-        st.table(sentence_pairs)
+        for pair in sentence_pairs:
+            st.write("Original: " + pair["Original"])
+            st.write("Translation: " + pair["Translation"])
+            st.write("---")  # 添加分隔线
     else:
         st.write("No sentence pairs could be generated.")
     
@@ -280,7 +283,7 @@ if st.button("Translate"):
             with st.spinner("Translating... This may take a moment."):
                 result = one_chunk_translate_text("gpt-4o", source_text)
             st.success("Translation completed!")
-            
+
             # 下載按鈕
             result_text = (
                 f"Source Text:\n{source_text}\n\n"
@@ -292,7 +295,7 @@ if st.button("Translate"):
 
             for pair in result['sentence_pairs']:
                 result_text += f"Original: {pair['Original']}\nTranslation: {pair['Translation']}\n\n"
-
+            
             result_text += (
                 f"Token Usage:\n"
                 f"Total tokens: {result['total_tokens']}\n"
