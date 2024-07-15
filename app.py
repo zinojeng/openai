@@ -26,16 +26,20 @@ st.title("Translation Agent")
 st.header("Select Languages")
 col1, col2, col3 = st.columns(3)
 
+# Language selection
+st.header("Select Languages")
+col1, col2, col3 = st.columns(3)
+
 with col1:
     source_lang = st.selectbox(
         "Source Language",
-        ["English", "Spanish", "French", "German", "Italian", "Japanese", "Korean", "Chinese"]
+        ["English", "Chinese", "Spanish", "French", "German", "Italian", "Japanese", "Korean", "Vietnamese", "Indonesian"]
     )
 
 with col2:
     target_lang = st.selectbox(
         "Target Language",
-        ["Traditional Chinese", "Simplified Chinese", "English", "Spanish", "French", "German", "Italian", "Japanese", "Korean"]
+        ["Traditional Chinese", "Simplified Chinese", "English", "Spanish", "French", "German", "Italian", "Japanese", "Korean", "Vietnamese", "Indonesian"]
     )
 
 with col3:
@@ -48,7 +52,9 @@ with col3:
         "German": ["Germany", "Austria", "Switzerland"],
         "Italian": ["Italy", "Switzerland"],
         "Japanese": ["Japan"],
-        "Korean": ["South Korea"]
+        "Korean": ["South Korea"],
+        "Vietnamese": ["Vietnam"],
+        "Indonesian": ["Indonesia"]
     }
     country = st.selectbox("Country/Region", country_options.get(target_lang, []))
 
