@@ -232,22 +232,27 @@ def one_chunk_translate_text(model, source_text):
     total_tokens = input_tokens + output_tokens
     estimated_cost_usd, estimated_cost_ntd = estimate_cost(input_tokens, output_tokens)
 
-    st.subheader("Token Usage and Cost Estimation")
+def one_chunk_translate_text(model, source_text):
+    # ... [前面的代码保持不变] ...
+
+    st.write("Token Usage and Cost Estimation:")
     st.write(f"Total tokens used: {total_tokens}")
     st.write(f"Input tokens: {input_tokens}")
     st.write(f"Output tokens: {output_tokens}")
     st.write(f"Estimated cost: USD {estimated_cost_usd:.2f} / NTD {estimated_cost_ntd:.2f}")
-
-    st.write("Token Pricing:")
-    st.markdown(f"""
+    
+    st.markdown("""
+        <small>
+        Token Pricing:  
         **Model**: gpt-4o  
         **Standard Pricing**:
-        * Input tokens: US${GPT4_INPUT_PRICE:.2f} / 1M tokens
-        * Output tokens: US${GPT4_OUTPUT_PRICE:.2f} / 1M tokens  
+        * Input tokens: US$5.00 / 1M tokens
+        * Output tokens: US$15.00 / 1M tokens  
         **Pricing with Batch API**:
-        * Input tokens: US${GPT4_BATCH_INPUT_PRICE:.2f} / 1M tokens
-        * Output tokens: US${GPT4_BATCH_OUTPUT_PRICE:.2f} / 1M tokens
-    """)
+        * Input tokens: US$2.50 / 1M tokens
+        * Output tokens: US$7.50 / 1M tokens
+        </small>
+    """, unsafe_allow_html=True)
 
     return {
         "initial_translation": translation_1,
@@ -284,11 +289,14 @@ if st.button("Translate"):
                 f"Input tokens: {result['input_tokens']}\n"
                 f"Output tokens: {result['output_tokens']}\n\n"
                 f"Estimated Cost: USD {result['estimated_cost_usd']:.2f} / NTD {result['estimated_cost_ntd']:.2f}\n\n"
-                f"Token Pricing:\n"
+                f"(Token Pricing:\n"
                 f"Model: gpt-4o\n"
+                f"Standard Pricing:\n"
+                f"* Input tokens: US${GPT4_INPUT_PRICE:.2f} / 1M tokens\n"
+                f"* Output tokens: US${GPT4_OUTPUT_PRICE:.2f} / 1M tokens\n"
                 f"Pricing with Batch API:\n"
                 f"* Input tokens: US${GPT4_BATCH_INPUT_PRICE:.2f} / 1M tokens\n"
-                f"* Output tokens: US${GPT4_BATCH_OUTPUT_PRICE:.2f} / 1M tokens\n"
+                f"* Output tokens: US${GPT4_BATCH_OUTPUT_PRICE:.2f} / 1M tokens)\n"
             )
 
             st.download_button(
