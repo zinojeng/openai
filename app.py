@@ -241,10 +241,7 @@ def one_chunk_translate_text(model, source_text):
     st.markdown("""
         <small>
         Token Pricing:  
-        **Model**: gpt-4o  
-        **Standard Pricing**:
-        * Input tokens: US$5.00 / 1M tokens
-        * Output tokens: US$15.00 / 1M tokens  
+        **Model**: gpt-4o       
         **Pricing with Batch API**:
         * Input tokens: US$2.50 / 1M tokens
         * Output tokens: US$7.50 / 1M tokens
@@ -288,9 +285,6 @@ if st.button("Translate"):
                 f"Estimated Cost: USD {result['estimated_cost_usd']:.2f} / NTD {result['estimated_cost_ntd']:.2f}\n\n"
                 f"(Token Pricing:\n"
                 f"Model: gpt-4o\n"
-                f"Standard Pricing:\n"
-                f"* Input tokens: US${GPT4_INPUT_PRICE:.2f} / 1M tokens\n"
-                f"* Output tokens: US${GPT4_OUTPUT_PRICE:.2f} / 1M tokens\n"
                 f"Pricing with Batch API:\n"
                 f"* Input tokens: US${GPT4_BATCH_INPUT_PRICE:.2f} / 1M tokens\n"
                 f"* Output tokens: US${GPT4_BATCH_OUTPUT_PRICE:.2f} / 1M tokens)\n"
