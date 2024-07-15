@@ -309,3 +309,6 @@ try:
     )
 except Exception as e:
     st.error(f"An error occurred: {e}")
+finally:
+    st.info("Execution finished.")
+
