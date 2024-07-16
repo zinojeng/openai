@@ -78,7 +78,7 @@ with col3:
     country = st.selectbox("Country/Region", country_options.get(target_lang, []))
 
 # Input method selection
-input_method = st.radio("Choose input method:", ("Upload PDF", "Upload TXT", "Upload Word Document", "Enter Text"))
+input_method = st.radio("Choose input method:", ("Enter Text", "Upload PDF", "Upload TXT", "Upload Word Document"))
 st.empty()  # 添加这行来清除可能的缓存
 
 # Function to read PDF
@@ -115,8 +115,12 @@ def read_doc_or_docx(file):
         st.error(f"Error reading file: {str(e)}")
         return ""
 
+input_method = st.radio("Choose input method:", ("Enter Text", "Upload PDF", "Upload TXT", "Upload Word Document"))
+
 # Input text based on selected method
-if input_method == "Upload PDF":
+if input_method == "Enter Text":
+    source_text = st.text_area("Enter the text to translate:", height=200)
+elif input_method == "Upload PDF":
     uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
     if uploaded_file is not None:
         source_text = read_pdf(uploaded_file)
