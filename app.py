@@ -34,6 +34,12 @@ openai_api_key = st.sidebar.text_input(
 if openai_api_key:
     os.environ["OPENAI_API_KEY"] = openai_api_key
 
+st.sidebar.markdown("""
+**Coded by:** Tseng Yao Hsien  
+**Contact:** zinojeng@gmail.com  
+**Reference:** [https://github.com/andrewyng/translation-agent](https://github.com/andrewyng/translation-agent)
+""")
+
 # Language selection
 st.header("Select Languages")
 col1, col2, col3 = st.columns(3)
