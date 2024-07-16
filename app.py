@@ -3,6 +3,7 @@ import os
 from litellm import completion
 import PyPDF2
 import io
+import tempfile
 from docx import Document
 import re
 import tiktoken
@@ -96,10 +97,17 @@ def read_doc_or_docx(file):
                 full_text.append(para.text)
             return '\n'.join(full_text)
         elif file_extension == 'doc':
-            # 將文件內容保存到臨时的字节流中
-            bytes_io = io.BytesIO(file.getvalue())
+            # 使用 tempfile 建立一個臨時文件
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.doc') as temp_file:
+                temp_file.write(file.getvalue())  # 將上傳文件的內容寫入臨時文件
+                temp_file_path = temp_file.name
+
             # 使用 textract 读取 .doc 文件
-            text = textract.process(bytes_io, extension='doc').decode('utf-8')
+            text = textract.process(temp_file_path).decode('utf-8')
+
+            # 刪除臨時文件
+            os.remove(temp_file_path)
+
             return text
         else:
             raise ValueError(f"Unsupported file format: {file_extension}")
