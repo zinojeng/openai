@@ -284,19 +284,8 @@ def perform_translation():
     result_text = f"""Source Text:
 {source_text}
 
-Initial Translation:
-{result['initial_translation']}
-
-Translation Reflection:
-{result['reflection']}
-
 Improved Translation:
 {result['improved_translation']}
-
-Token Usage:
-Total tokens: {result['total_tokens']}
-Input tokens: {result['input_tokens']}
-Output tokens: {result['output_tokens']}
 
 Estimated Cost: NTD {result['estimated_cost']:.2f}
 """
