@@ -35,11 +35,16 @@ if openai_api_key:
     os.environ["OPENAI_API_KEY"] = openai_api_key
 
 st.sidebar.markdown("""
-**Coded by:** Tseng Yao Hsien  
+**Coded by:** Tseng Yao Hsien 
 **Contact:** zinojeng@gmail.com  
-**Reference:** [https://github.com/andrewyng/translation-agent](https://github.com/andrewyng/translation-agent)
-""")
+**Reference:** Andrew Ng's AI Agent System for Language Translation [https://github.com/andrewyng/translation-agent](https://github.com/andrewyng/translation-agent)
 
+Translation Agent 是一個基於 Python 的開源專案，它採用了一種新穎的“省思式工作流程"，旨在解決傳統機器翻譯系統在定制化和細粒度控制方面的不足。
+Translation Agent 的工作原理：省思式工作流程 Translation Agent 的核心在於其獨特的“省思式工作流程”，該工作流程模擬了人類翻譯專家的思考過程，將翻譯任務分解為三個主要步驟：
+1. 初始翻譯：Translation Agent 首先利用 LLM 對輸入文本進行初步翻譯，產出一個初譯的內容。
+2. 反思與改進：與傳統機器翻譯系統直接輸出譯文不同，Translation Agent 會引導 LLM 對自身的翻譯結果進行反思，並提出改進建議。例如，LLM 可能會指出譯文中存在的不準確、不流暢或不符合目標語言的慣用表達的地方，就像一個語言審核者一樣，幫助 LLM 找出翻譯中的不足之處。
+3. 優化輸出：最後，根據 LLM 的建議，Translation Agent 對初譯的內容進行優化處理，產生更符合目標語言慣用表達、更精確且流暢的譯文。
+""")
 # Language selection
 st.header("Select Languages")
 col1, col2, col3 = st.columns(3)
