@@ -156,7 +156,7 @@ def get_completion(user_prompt, system_message="You are a helpful assistant.", m
     return response["choices"][0]["message"]["content"]
 
 def one_chunk_initial_translation(model, source_text):
-    system_message = f"You are an expert linguist, specializing in translation from {source_lang} to {target_lang}."
+    system_message = f"You are an expert medical translator, specializing in translating medical instructions and educational materials from {source_lang} to {target_lang}."
     translation_prompt = f"""This is an {source_lang} to {target_lang} translation, please provide the {target_lang} translation for this text. \
 Do not provide any explanations or text apart from the translation.
 {source_lang}: {source_text}
@@ -165,7 +165,7 @@ Do not provide any explanations or text apart from the translation.
     return get_completion(translation_prompt, system_message=system_message, model=model)
 
 def one_chunk_reflect_on_translation(model, source_text, translation_1):
-    system_message = f"You are an expert linguist specializing in translation from {source_lang} to {target_lang}. \
+    system_message = f"You are an expert medical translator specializing in translation from {source_lang} to {target_lang}. \
 You will be provided with a source text and its translation and your goal is to improve the translation."
     prompt = f"""Your task is to carefully read a source text and a translation from {source_lang} to {target_lang}, and then give constructive criticism and helpful suggestions to improve the translation. \
 The final style and tone of the translation should match the style of {target_lang} colloquially spoken in {country}.
