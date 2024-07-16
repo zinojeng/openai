@@ -112,7 +112,7 @@ elif input_method == "Upload TXT":
     else:
         source_text = ""
 elif input_method == "Upload Word Document":
-    uploaded_file = st.file_uploader("Choose a Word Document", type=["doc", "docx"])
+    uploaded_file = st.file_uploader("Choose a Word Document", type=["docx"])
     if uploaded_file is not None:
         source_text = read_doc_or_docx(uploaded_file)
         if source_text:
