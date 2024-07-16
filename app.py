@@ -127,12 +127,12 @@ specialties = {
     ],
 }
 
-# 優化輸出選項
-st.subheader("優化輸出選項 (可選)")
-selected_department = st.sidebar.selectbox("選擇科別 (可選)", ["無"] + list(specialties.keys()))
+# 專科選擇
+st.subheader("選擇專科 (可選)")
+selected_department = st.selectbox("選擇科別 (可選)", ["無"] + list(specialties.keys()))
 
 if selected_department != "無":
-    selected_specialty = st.sidebar.selectbox("選擇專科 (可選)", ["無"] + specialties[selected_department])
+    selected_specialty = st.selectbox("選擇專科 (可選)", ["無"] + specialties[selected_department])
 else:
     selected_specialty = "無"
 
