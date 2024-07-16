@@ -46,6 +46,40 @@ st.sidebar.markdown("""
 3.優化輸出: 根據 LLM 的建議，優化譯文，使其更精確、流暢，並符合目標語言的慣用表達。\n
 """)
 
+
+# Language selection
+st.header("Select Languages")
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    source_lang = st.selectbox(
+        "Source Language",
+        ["English", "Chinese", "Spanish", "French", "German", "Italian", "Japanese", "Korean", "Vietnamese", "Indonesian", "Thai"]
+    )
+
+with col2:
+    target_lang = st.selectbox(
+        "Target Language",
+        ["Traditional Chinese", "Simplified Chinese", "English", "Spanish", "French", "German", "Italian", "Japanese", "Korean", "Vietnamese", "Indonesian", "Thai"]
+    )
+
+with col3:
+    country_options = {
+        "Traditional Chinese": ["Taiwan", "Hong Kong"],
+        "Simplified Chinese": ["China", "Singapore"],
+        "English": ["USA", "UK", "Australia", "Canada"],
+        "Spanish": ["Spain", "Mexico", "Argentina"],
+        "French": ["France", "Canada", "Belgium"],
+        "German": ["Germany", "Austria", "Switzerland"],
+        "Italian": ["Italy", "Switzerland"],
+        "Japanese": ["Japan"],
+        "Korean": ["South Korea"],
+        "Vietnamese": ["Vietnam"],
+        "Indonesian": ["Indonesia"],
+        "Thai": ["Thailand"]
+    }
+    country = st.selectbox("Country/Region", country_options.get(target_lang, []))
+
 # 專科介紹
 specialties = {
     "內科": [
@@ -94,7 +128,7 @@ specialties = {
 }
 
 # 優化輸出選項
-st.sidebar.subheader("優化輸出選項 (可選)")
+st.subheader("優化輸出選項 (可選)")
 selected_department = st.sidebar.selectbox("選擇科別 (可選)", ["無"] + list(specialties.keys()))
 
 if selected_department != "無":
@@ -102,38 +136,6 @@ if selected_department != "無":
 else:
     selected_specialty = "無"
 
-# Language selection
-st.header("Select Languages")
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    source_lang = st.selectbox(
-        "Source Language",
-        ["English", "Chinese", "Spanish", "French", "German", "Italian", "Japanese", "Korean", "Vietnamese", "Indonesian", "Thai"]
-    )
-
-with col2:
-    target_lang = st.selectbox(
-        "Target Language",
-        ["Traditional Chinese", "Simplified Chinese", "English", "Spanish", "French", "German", "Italian", "Japanese", "Korean", "Vietnamese", "Indonesian", "Thai"]
-    )
-
-with col3:
-    country_options = {
-        "Traditional Chinese": ["Taiwan", "Hong Kong"],
-        "Simplified Chinese": ["China", "Singapore"],
-        "English": ["USA", "UK", "Australia", "Canada"],
-        "Spanish": ["Spain", "Mexico", "Argentina"],
-        "French": ["France", "Canada", "Belgium"],
-        "German": ["Germany", "Austria", "Switzerland"],
-        "Italian": ["Italy", "Switzerland"],
-        "Japanese": ["Japan"],
-        "Korean": ["South Korea"],
-        "Vietnamese": ["Vietnam"],
-        "Indonesian": ["Indonesia"],
-        "Thai": ["Thailand"]
-    }
-    country = st.selectbox("Country/Region", country_options.get(target_lang, []))
 
 # Input method selection
 input_method = st.radio("Choose input method:", ("Enter Text", "Upload PDF", "Upload TXT", "Upload Word Document"))
