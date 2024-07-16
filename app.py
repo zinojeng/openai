@@ -2,14 +2,11 @@ import streamlit as st
 import os
 from litellm import completion
 import PyPDF2
-import tempfile
 from docx import Document
-import re
 import tiktoken
 import nltk
 import ssl
 import docx2txt
-
 
 # SSL and NLTK setup
 try:
@@ -92,19 +89,6 @@ def read_doc_or_docx(file):
     try:
         if file_extension == 'docx':
             text = docx2txt.process(file)
-            return text
-        elif file_extension == 'doc':
-            # 使用 tempfile 建立一個臨時文件
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.doc') as temp_file:
-                temp_file.write(file.getvalue())  # 將上傳文件的內容寫入臨時文件
-                temp_file_path = temp_file.name
-
-            # 使用 docx2txt 读取 .doc 文件
-            text = docx2txt.process(temp_file_path)
-
-            # 刪除臨時文件
-            os.remove(temp_file_path)
-
             return text
         else:
             raise ValueError(f"Unsupported file format: {file_extension}")
