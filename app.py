@@ -79,6 +79,7 @@ with col3:
 
 # Input method selection
 input_method = st.radio("Choose input method:", ("Upload PDF", "Upload TXT", "Upload Word Document", "Enter Text"))
+st.empty()  # 添加这行来清除可能的缓存
 
 # Function to read PDF
 def read_pdf(file):
