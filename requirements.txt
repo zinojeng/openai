@@ -4,3 +4,4 @@ PyPDF2==3.0.1
 python-docx
 tiktoken
 nltk==3.8.1
+docx2txt

@@ -8,6 +8,7 @@ import re
 import tiktoken
 import nltk
 import ssl
+import docx2txt
 
 try:
     _create_unverified_https_context = ssl._create_unverified_context
@@ -90,12 +91,13 @@ def read_txt(file):
     return file.getvalue().decode("utf-8")
 
 # Function to read Word Document
-def read_docx(file):
-    doc = Document(file)
-    full_text = []
-    for para in doc.paragraphs:
-        full_text.append(para.text)
-    return '\n'.join(full_text)
+def read_doc_or_docx(file):
+    try:
+        text = docx2txt.process(file)
+        return text
+    except Exception as e:
+        st.error(f"Error reading file: {str(e)}")
+        return ""
 
 # Input text based on selected method
 if input_method == "Upload PDF":
@@ -115,8 +117,9 @@ elif input_method == "Upload TXT":
 elif input_method == "Upload Word Document":
     uploaded_file = st.file_uploader("Choose a Word Document", type=["doc", "docx"])
     if uploaded_file is not None:
-        source_text = read_docx(uploaded_file)
-        st.text_area("Extracted text from Word Document:", value=source_text, height=200)
+        source_text = read_doc_or_docx(uploaded_file)
+        if source_text:
+            st.text_area("Extracted text from Word Document:", value=source_text, height=200)
     else:
         source_text = ""
 else:  # Enter Text
