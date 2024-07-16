@@ -8,7 +8,9 @@ import re
 import tiktoken
 import nltk
 import ssl
-import docx2txt
+from docx import Document
+import textract
+import io
 
 try:
     _create_unverified_https_context = ssl._create_unverified_context
@@ -92,9 +94,22 @@ def read_txt(file):
 
 # Function to read Word Document
 def read_doc_or_docx(file):
+    file_extension = file.name.split('.')[-1].lower()
     try:
-        text = docx2txt.process(file)
-        return text
+        if file_extension == 'docx':
+            doc = Document(file)
+            full_text = []
+            for para in doc.paragraphs:
+                full_text.append(para.text)
+            return '\n'.join(full_text)
+        elif file_extension == 'doc':
+            # 将文件内容保存到临时的字节流中
+            bytes_io = io.BytesIO(file.getvalue())
+            # 使用 textract 读取 .doc 文件
+            text = textract.process(bytes_io, extension='doc').decode('utf-8')
+            return text
+        else:
+            raise ValueError(f"Unsupported file format: {file_extension}")
     except Exception as e:
         st.error(f"Error reading file: {str(e)}")
         return ""
@@ -120,10 +135,10 @@ elif input_method == "Upload Word Document":
         source_text = read_doc_or_docx(uploaded_file)
         if source_text:
             st.text_area("Extracted text from Word Document:", value=source_text, height=200)
+        else:
+            st.error("Failed to extract text from the document.")
     else:
         source_text = ""
-else:  # Enter Text
-    source_text = st.text_area("Enter the text to translate:", height=200)
 
 def estimate_token_count(text):
     encoding = tiktoken.encoding_for_model("gpt-4o")
