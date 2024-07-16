@@ -245,47 +245,51 @@ def create_sentence_pairs(source_text, translated_text):
     return pairs
 
 def one_chunk_translate_text(model, source_text):
-    st.subheader("Initial Translation")
-    translation_1 = one_chunk_initial_translation(model, source_text)
-    st.write(translation_1)
+    try:
+        st.subheader("Initial Translation")
+        translation_1 = one_chunk_initial_translation(model, source_text)
+        st.write(translation_1)
 
-    st.subheader("Translation Reflection")
-    reflection = one_chunk_reflect_on_translation(model, source_text, translation_1)
-    st.write(reflection)
+        st.subheader("Translation Reflection")
+        reflection = one_chunk_reflect_on_translation(model, source_text, translation_1)
+        st.write(reflection)
 
-    st.subheader("Improved Translation")
-    improved_translation = one_chunk_improve_translation(model, source_text, translation_1, reflection)
-    st.write(improved_translation)
+        st.subheader("Improved Translation")
+        improved_translation = one_chunk_improve_translation(model, source_text, translation_1, reflection)
+        st.write(improved_translation)
 
-    st.subheader("Sentence-by-Sentence Comparison")
-    sentence_pairs = create_sentence_pairs(source_text, improved_translation)
-    
-    if sentence_pairs:
-        st.table(sentence_pairs)
-    else:
-        st.write("No sentence pairs could be generated.")
-    
-    input_tokens = estimate_token_count(source_text)
-    output_tokens = estimate_token_count(translation_1) + estimate_token_count(reflection) + estimate_token_count(improved_translation)
-    total_tokens = input_tokens + output_tokens
-    estimated_cost = estimate_cost(input_tokens, output_tokens)
+        st.subheader("Sentence-by-Sentence Comparison")
+        sentence_pairs = create_sentence_pairs(source_text, improved_translation)
+        
+        if sentence_pairs:
+            st.table(sentence_pairs)
+        else:
+            st.write("No sentence pairs could be generated.")
+        
+        input_tokens = estimate_token_count(source_text)
+        output_tokens = estimate_token_count(translation_1) + estimate_token_count(reflection) + estimate_token_count(improved_translation)
+        total_tokens = input_tokens + output_tokens
+        estimated_cost = estimate_cost(input_tokens, output_tokens)
 
-    st.subheader("Token Usage and Cost Estimation")
-    st.write(f"Total tokens used: {total_tokens}")
-    st.write(f"Input tokens: {input_tokens}")
-    st.write(f"Output tokens: {output_tokens}")
-    st.write(f"Estimated cost: NTD {estimated_cost:.2f}")
+        st.subheader("Token Usage and Cost Estimation")
+        st.write(f"Total tokens used: {total_tokens}")
+        st.write(f"Input tokens: {input_tokens}")
+        st.write(f"Output tokens: {output_tokens}")
+        st.write(f"Estimated cost: NTD {estimated_cost:.2f}")
 
-    return {
-        "initial_translation": translation_1,
-        "reflection": reflection,
-        "improved_translation": improved_translation,
-        "sentence_pairs": sentence_pairs,
-        "total_tokens": total_tokens,
-        "input_tokens": input_tokens,
-        "output_tokens": output_tokens,
-        "estimated_cost": estimated_cost
-    }
+        return {
+            "initial_translation": translation_1,
+            "reflection": reflection,
+            "improved_translation": improved_translation,
+            "sentence_pairs": sentence_pairs,
+            "total_tokens": total_tokens,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "estimated_cost": estimated_cost
+        }
+    except Exception as e:
+        st.error(f"An error occurred during translation processing: {str(e)}")
+        return None
 
 # Translate button
 if st.button("Translate"):
