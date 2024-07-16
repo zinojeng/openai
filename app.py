@@ -222,43 +222,20 @@ Provide your improved translation as a continuous text, without any additional f
 
     return get_completion(prompt, system_message, model=model)
 
-def create_sentence_pairs(source_text, translated_text):
-    source_sentences = nltk.sent_tokenize(source_text)
-    translated_sentences = nltk.sent_tokenize(translated_text)
-
-    sentence_pairs = []
-    for i in range(min(len(source_sentences), len(translated_sentences))):
-        sentence_pairs.append({
-            "Original": source_sentences[i],
-            "Translation": translated_sentences[i]
-        })
-
-    return sentence_pairs
-
 def one_chunk_translate_text(model, source_text):
     try:
-        st.subheader("Initial Translation")
-        translation_1 = one_chunk_initial_translation(model, source_text)
-        st.write(translation_1)
+        source_sentences = nltk.sent_tokenize(source_text)
 
-        st.subheader("Translation Reflection")
-        reflection = one_chunk_reflect_on_translation(model, source_text, translation_1)
-        st.write(reflection)
+        st.subheader("Sentence-by-Sentence Translation")
+        for sentence in source_sentences:
+            translation_1 = one_chunk_initial_translation(model, sentence)
+            reflection = one_chunk_reflect_on_translation(model, sentence, translation_1)
+            improved_translation = one_chunk_improve_translation(model, sentence, translation_1, reflection)
 
-        st.subheader("Improved Translation")
-        improved_translation = one_chunk_improve_translation(model, source_text, translation_1, reflection)
-        st.write(improved_translation)
+            st.write(f"{sentence} \n {improved_translation}\n")  # 將原文和譯文一起顯示
 
-        st.subheader("Sentence-by-Sentence Comparison")
-        sentence_pairs = create_sentence_pairs(source_text, improved_translation)
+        # ... (其他程式碼，例如計算token數量和預估費用) ...
 
-        if sentence_pairs:
-            for pair in sentence_pairs:
-                st.write(f"Original: {pair['Original']}")
-                st.write(f"Translation: {pair['Translation']}\n")  # 顯示每一句的翻譯結果
-        else:
-            st.write("No sentence pairs could be generated.")
-        
         input_tokens = estimate_token_count(source_text)
         output_tokens = estimate_token_count(translation_1) + estimate_token_count(reflection) + estimate_token_count(improved_translation)
         total_tokens = input_tokens + output_tokens
@@ -274,7 +251,6 @@ def one_chunk_translate_text(model, source_text):
             "initial_translation": translation_1,
             "reflection": reflection,
             "improved_translation": improved_translation,
-            "sentence_pairs": sentence_pairs,
             "total_tokens": total_tokens,
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
@@ -316,12 +292,7 @@ Translation Reflection:
 Improved Translation:
 {result['improved_translation']}
 
-Sentence-by-Sentence Comparison:
-"""
-    for pair in result['sentence_pairs']:
-        result_text += f"Original: {pair['Original']}\nTranslation: {pair['Translation']}\n\n"
-
-    result_text += f"""Token Usage:
+Token Usage:
 Total tokens: {result['total_tokens']}
 Input tokens: {result['input_tokens']}
 Output tokens: {result['output_tokens']}
