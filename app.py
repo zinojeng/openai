@@ -267,32 +267,36 @@ if st.button("Translate"):
         with st.spinner("Translating..."):
             result = one_chunk_translate_text("gpt-4o", source_text)
 
-Initial Translation:
-{result['initial_translation']}
+        # Make sure result is not None before accessing its elements
+        if result is not None:
+            st.success("Translation completed!")
 
-Translation Reflection:
-{result['reflection']}
+            # Prepare download button
+            result_text = f"""Source Text:
+    {source_text}
 
-Improved Translation:
-{result['improved_translation']}
+    Initial Translation:
+    {result['initial_translation']}
 
-Token Usage:
-Total tokens: {result['total_tokens']}
-Input tokens: {result['input_tokens']}
-Output tokens: {result['output_tokens']}
+    Translation Reflection:
+    {result['reflection']}
 
-Estimated Cost: NTD {result['estimated_cost']:.2f}
-"""
+    Improved Translation:
+    {result['improved_translation']}
 
-    st.download_button(
-        label="Download Translation Results",
-        data=result_text,
-        file_name="translation_results.txt",
-        mime="text/plain"
-    )
+    Token Usage:
+    Total tokens: {result['total_tokens']}
+    Input tokens: {result['input_tokens']}
+    Output tokens: {result['output_tokens']}
 
-if st.button("Translate"):
-    perform_translation()
-    st.info("Execution finished")
-=======
-        st.success("Translation completed!")
+    Estimated Cost: NTD {result['estimated_cost']:.2f}
+    """
+
+            st.download_button(
+                label="Download Translation Results",
+                data=result_text,
+                file_name="translation_results.txt",
+                mime="text/plain"
+            )
+        else:
+            st.error("Translation failed. Please check your input and API key.")
