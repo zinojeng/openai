@@ -298,11 +298,11 @@ if st.button("Translate"):
     elif not source_text:
         st.error("Please provide some text to translate.")
     else:
-        try:
+        try:  # 這裡是第283行，缺少except或finally
             with st.spinner("Translating... This may take a moment."):
                 result = one_chunk_translate_text("gpt-4o", source_text)
             st.success("Translation completed!")
-        except Exception as e:
+        except Exception as e:  # 這裡添加except塊
             st.error(f"An error occurred during translation: {str(e)}")
             return  # Exit the function if translation fails
 
