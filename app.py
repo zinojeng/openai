@@ -46,6 +46,62 @@ st.sidebar.markdown("""
 3.優化輸出: 根據 LLM 的建議，優化譯文，使其更精確、流暢，並符合目標語言的慣用表達。\n
 """)
 
+# 專科介紹
+specialties = {
+    "內科": [
+        "胸腔內科",
+        "職業醫學科",
+        "一般內科",
+        "內分泌暨新陳代謝科",
+        "神經內科",
+        "腎臟內科",
+        "心臟內科",
+        "過敏免疫風濕科",
+        "感染科",
+        "家庭醫學科",
+        "胃腸肝膽科",
+        "血液腫瘤科",
+    ],
+    "外科": [
+        "骨科",
+        "一般外科",
+        "神經外科",
+        "泌尿科",
+        "胸腔外科",
+        "心臟血管外科",
+        "整形外科",
+        "大腸直腸外科",
+        "小兒外科",
+    ],
+    "其他專科": [
+        "婦產部",
+        "兒童醫學部",
+        "眼科",
+        "核子醫學科",
+        "麻醉科",
+        "耳鼻喉部",
+        "皮膚科",
+        "心身科",
+        "放射腫瘤科",
+        "解剖病理科",
+        "放射診斷科",
+        "臨床病理科",
+        "復健醫學部",
+        "急診醫學部",
+        "口腔醫學部",
+        "中醫科",
+    ],
+}
+
+# 優化輸出選項
+st.sidebar.subheader("優化輸出選項 (可選)")
+selected_department = st.sidebar.selectbox("選擇科別 (可選)", ["無"] + list(specialties.keys()))
+
+if selected_department != "無":
+    selected_specialty = st.sidebar.selectbox("選擇專科 (可選)", ["無"] + specialties[selected_department])
+else:
+    selected_specialty = "無"
+
 # Language selection
 st.header("Select Languages")
 col1, col2, col3 = st.columns(3)
@@ -221,6 +277,12 @@ Please take into account the expert suggestions when editing the translation. Ed
 (v) other errors.
 
 Provide your improved translation as a continuous text, without any additional formatting or labels."""
+        # Add specialty information (if a specialty is selected)
+    if selected_specialty != "無":
+        prompt += f"This translation is for medical instructions related to {selected_specialty}. Please ensure the terminology is accurate and appropriate for this specialty.\n\n"
+
+    # Complete the prompt
+    prompt += """Provide your improved translation as a continuous text, without any additional formatting or labels."""
 
     return get_completion(prompt, system_message, model=model)
 
