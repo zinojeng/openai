@@ -225,14 +225,17 @@ Provide your improved translation as a continuous text, without any additional f
 def create_sentence_pairs(source_text, translated_text):
     source_sentences = nltk.sent_tokenize(source_text)
     translated_sentences = nltk.sent_tokenize(translated_text)
-    
-    min_length = min(len(source_sentences), len(translated_sentences))
-    
-    return [
-        {"Original": source.strip(), "Translation": translation.strip()}
-        for source, translation in zip(source_sentences[:min_length], translated_sentences[:min_length])
-        if source.strip() and translation.strip()
-    ]
+
+    sentence_pairs = []
+    for i in range(min(len(source_sentences), len(translated_sentences))):
+        source_sentence = source_sentences[i].strip()
+        translated_sentence = translated_sentences[i].strip()
+        if source_sentence and translated_sentence:
+            sentence_pairs.append({
+                "Original": source_sentence,
+                "Translation": translated_sentence
+            })
+    return sentence_pairs
 
 def one_chunk_translate_text(model, source_text):
     try:
@@ -250,9 +253,11 @@ def one_chunk_translate_text(model, source_text):
 
         st.subheader("Sentence-by-Sentence Comparison")
         sentence_pairs = create_sentence_pairs(source_text, improved_translation)
-        
+
         if sentence_pairs:
-            st.table(sentence_pairs)
+            for pair in sentence_pairs:
+                st.write(f"Original: {pair['Original']}")
+                st.write(f"Translation: {pair['Translation']}\n")
         else:
             st.write("No sentence pairs could be generated.")
         
