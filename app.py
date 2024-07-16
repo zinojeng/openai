@@ -6,6 +6,7 @@ import io
 from docx import Document
 import re
 import tiktoken
+
 import nltk
 import ssl
 from docx import Document
@@ -20,14 +21,6 @@ else:
     ssl._create_default_https_context = _create_unverified_https_context
 
 nltk.download('punkt', quiet=True)
-
-# Token pricing constants
-GPT4_INPUT_PRICE = 5.00  # USD per 1M tokens
-GPT4_OUTPUT_PRICE = 15.00  # USD per 1M tokens
-GPT4_BATCH_INPUT_PRICE = 2.50  # USD per 1M tokens
-GPT4_BATCH_OUTPUT_PRICE = 7.50  # USD per 1M tokens
-USD_TO_NTD = 30  # 假设汇率，您可以根据实际情况调整
-
 
 # Set page config
 st.set_page_config(page_title="Translation Agent", layout="wide")
@@ -78,8 +71,12 @@ with col3:
     country = st.selectbox("Country/Region", country_options.get(target_lang, []))
 
 # Input method selection
+<<<<<<< HEAD
 input_method = st.radio("Choose input method:", ("Enter Text", "Upload PDF", "Upload TXT", "Upload Word Document"))
 st.empty()  # 添加这行来清除可能的缓存
+=======
+input_method = st.radio("Choose input method:", ("Upload PDF", "Upload TXT", "Upload Word Document", "Enter Text"))
+>>>>>>> 5642ae2 (return previous to fix endter text problem)
 
 # Function to read PDF
 def read_pdf(file):
@@ -94,6 +91,7 @@ def read_txt(file):
     return file.getvalue().decode("utf-8")
 
 # Function to read Word Document
+<<<<<<< HEAD
 def read_doc_or_docx(file):
     file_extension = file.name.split('.')[-1].lower()
     try:
@@ -116,11 +114,17 @@ def read_doc_or_docx(file):
         return ""
 
 input_method = st.radio("Choose input method:", ("Enter Text", "Upload PDF", "Upload TXT", "Upload Word Document"))
+=======
+def read_docx(file):
+    doc = Document(file)
+    full_text = []
+    for para in doc.paragraphs:
+        full_text.append(para.text)
+    return '\n'.join(full_text)
+>>>>>>> 5642ae2 (return previous to fix endter text problem)
 
 # Input text based on selected method
-if input_method == "Enter Text":
-    source_text = st.text_area("Enter the text to translate:", height=200)
-elif input_method == "Upload PDF":
+if input_method == "Upload PDF":
     uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
     if uploaded_file is not None:
         source_text = read_pdf(uploaded_file)
@@ -144,21 +148,25 @@ elif input_method == "Upload Word Document":
             st.error("Failed to extract text from the document.")
     else:
         source_text = ""
+else:  # Enter Text
+    source_text = st.text_area("Enter the text to translate:", height=200)
 
 def estimate_token_count(text):
-    encoding = tiktoken.encoding_for_model("gpt-4o")
+    encoding = tiktoken.encoding_for_model("gpt-4")
     return len(encoding.encode(text))
 
 def estimate_cost(input_tokens, output_tokens, use_batch_api=False):
     if use_batch_api:
-        input_cost = (input_tokens / 1_000_000) * GPT4_BATCH_INPUT_PRICE
-        output_cost = (output_tokens / 1_000_000) * GPT4_BATCH_OUTPUT_PRICE
+        input_cost = (input_tokens / 1_000_000) * 2.50
+        output_cost = (output_tokens / 1_000_000) * 7.50
     else:
-        input_cost = (input_tokens / 1_000_000) * GPT4_INPUT_PRICE
-        output_cost = (output_tokens / 1_000_000) * GPT4_OUTPUT_PRICE
+        input_cost = (input_tokens / 1_000_000) * 5.00
+        output_cost = (output_tokens / 1_000_000) * 15.00
     total_cost_usd = input_cost + output_cost
-    total_cost_ntd = total_cost_usd * USD_TO_NTD
-    return total_cost_usd, total_cost_ntd
+    # 假設 1 USD = 30 NTD，您可以根據實際匯率調整
+    total_cost_ntd = total_cost_usd * 30
+    return total_cost_ntd
+
 
 # Translation functions
 def get_completion(user_prompt, system_message="You are a helpful assistant.", model="gpt-4o", temperature=0.3):
@@ -237,6 +245,22 @@ Provide your improved translation as a continuous text, without any additional f
 
     return get_completion(prompt, system_message, model=model)
 
+def create_sentence_pairs(source_text, translated_text):
+    source_sentences = sent_tokenize(source_text)
+    translated_sentences = sent_tokenize(translated_text)
+    
+    # 確保兩個列表長度相同
+    min_length = min(len(source_sentences), len(translated_sentences))
+    
+    pairs = []
+    for i in range(min_length):
+        source = source_sentences[i].strip()
+        translation = translated_sentences[i].strip()
+        if source and translation:  # 確保兩者都不為空
+            pairs.append({"Original": source, "Translation": translation})
+    
+    return pairs
+
 def one_chunk_translate_text(model, source_text):
     st.subheader("Initial Translation")
     translation_1 = one_chunk_initial_translation(model, source_text)
@@ -250,38 +274,35 @@ def one_chunk_translate_text(model, source_text):
     improved_translation = one_chunk_improve_translation(model, source_text, translation_1, reflection)
     st.write(improved_translation)
 
+    st.subheader("Sentence-by-Sentence Comparison")
+    sentence_pairs = create_sentence_pairs(source_text, improved_translation)
+    
+    if sentence_pairs:
+        st.table(sentence_pairs)
+    else:
+        st.write("No sentence pairs could be generated.")
+    
     input_tokens = estimate_token_count(source_text)
     output_tokens = estimate_token_count(translation_1) + estimate_token_count(reflection) + estimate_token_count(improved_translation)
     total_tokens = input_tokens + output_tokens
-    estimated_cost_usd, estimated_cost_ntd = estimate_cost(input_tokens, output_tokens)
+    estimated_cost = estimate_cost(input_tokens, output_tokens)
 
-    st.write("Token Usage and Cost Estimation:")
+    st.subheader("Token Usage and Cost Estimation")
     st.write(f"Total tokens used: {total_tokens}")
     st.write(f"Input tokens: {input_tokens}")
     st.write(f"Output tokens: {output_tokens}")
-    st.write(f"Estimated cost: USD {estimated_cost_usd:.2f} / NTD {estimated_cost_ntd:.2f}")
-    
-    st.markdown("""
-        <small>
-        Token Pricing:  
-        **Model**: gpt-4o       
-        **Pricing with Batch API**:
-        * Input tokens: US$2.50 / 1M tokens
-        * Output tokens: US$7.50 / 1M tokens
-        </small>
-    """, unsafe_allow_html=True)
+    st.write(f"Estimated cost: NTD {estimated_cost:.2f}")
 
     return {
         "initial_translation": translation_1,
         "reflection": reflection,
         "improved_translation": improved_translation,
+        "sentence_pairs": sentence_pairs,
         "total_tokens": total_tokens,
         "input_tokens": input_tokens,
         "output_tokens": output_tokens,
-        "estimated_cost_usd": estimated_cost_usd,
-        "estimated_cost_ntd": estimated_cost_ntd
+        "estimated_cost": estimated_cost
     }
-
 
 # Translate button
 if st.button("Translate"):
@@ -294,23 +315,25 @@ if st.button("Translate"):
             with st.spinner("Translating... This may take a moment."):
                 result = one_chunk_translate_text("gpt-4o", source_text)
             st.success("Translation completed!")
-
+            
             # 下載按鈕
             result_text = (
                 f"Source Text:\n{source_text}\n\n"
                 f"Initial Translation:\n{result['initial_translation']}\n\n"
                 f"Translation Reflection:\n{result['reflection']}\n\n"
                 f"Improved Translation:\n{result['improved_translation']}\n\n"
+                "Sentence-by-Sentence Comparison:\n"
+            )
+
+            for pair in result['sentence_pairs']:
+                result_text += f"Original: {pair['Original']}\nTranslation: {pair['Translation']}\n\n"
+
+            result_text += (
                 f"Token Usage:\n"
                 f"Total tokens: {result['total_tokens']}\n"
                 f"Input tokens: {result['input_tokens']}\n"
                 f"Output tokens: {result['output_tokens']}\n\n"
-                f"Estimated Cost: USD {result['estimated_cost_usd']:.2f} / NTD {result['estimated_cost_ntd']:.2f}\n\n"
-                f"(Token Pricing:\n"
-                f"Model: gpt-4o\n"
-                f"Pricing with Batch API:\n"
-                f"* Input tokens: US${GPT4_BATCH_INPUT_PRICE:.2f} / 1M tokens\n"
-                f"* Output tokens: US${GPT4_BATCH_OUTPUT_PRICE:.2f} / 1M tokens)\n"
+                f"Estimated Cost: NTD {result['estimated_cost']:.2f}\n"
             )
 
             st.download_button(
@@ -321,6 +344,5 @@ if st.button("Translate"):
             )
         except Exception as e:
             st.error(f"An error occurred during translation: {str(e)}")
-            st.error("Please check your input and try again.")
         finally:
             st.info("Execution finished.")
