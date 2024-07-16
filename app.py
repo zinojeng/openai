@@ -39,12 +39,13 @@ st.sidebar.markdown("""
 **Contact:** zinojeng@gmail.com  
 **Reference:** Andrew Ng's AI Agent System for Language Translation [https://github.com/andrewyng/translation-agent](https://github.com/andrewyng/translation-agent)
 
-<small>Translation Agent 是一個基於 Python 的開源專案，它採用了一種新穎的“省思式工作流程"，旨在解決傳統機器翻譯系統在定制化和細粒度控制方面的不足。</small>
-<small>Translation Agent 的工作原理：省思式工作流程 Translation Agent 的核心在於其獨特的“省思式工作流程”，該工作流程模擬了人類翻譯專家的思考過程，將翻譯任務分解為三個主要步驟：</small>
-<small>1. 初始翻譯：Translation Agent 首先利用 LLM 對輸入文本進行初步翻譯，產出一個初譯的內容。</small>
-<small>2. 反思與改進：與傳統機器翻譯系統直接輸出譯文不同，Translation Agent 會引導 LLM 對自身的翻譯結果進行反思，並提出改進建議。例如，LLM 可能會指出譯文中存在的不準確、不流暢或不符合目標語言的慣用表達的地方，就像一個語言審核者一樣，幫助 LLM 找出翻譯中的不足之處。</small>
-<small>3. 優化輸出：最後，根據 LLM 的建議，Translation Agent 對初譯的內容進行優化處理，產生更符合目標語言慣用表達、更精確且流暢的譯文。</small>
+**Translation Agent** 是一個開源專案，旨在提升機器翻譯的品質。它採用獨特的「省思式工作流程」，模擬人類翻譯專家的思考過程：
+
+初始翻譯: 利用大型語言模型 (LLM) 產生初步譯文。
+反思與改進: 引導 LLM 反思自身譯文，提出改進建議，如同語言審核者般找出不足之處。
+優化輸出: 根據 LLM 的建議，優化譯文，使其更精確、流暢，並符合目標語言的慣用表達。
 """)
+
 # Language selection
 st.header("Select Languages")
 col1, col2, col3 = st.columns(3)
