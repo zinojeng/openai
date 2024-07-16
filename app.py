@@ -39,11 +39,11 @@ st.sidebar.markdown("""
 **Contact:** zinojeng@gmail.com  
 **Reference:** Andrew Ng's AI Agent System for Language Translation [https://github.com/andrewyng/translation-agent](https://github.com/andrewyng/translation-agent)
 
-**Translation Agent** 是一個開源專案，旨在提升機器翻譯的品質。它採用獨特的「省思式工作流程」，模擬人類翻譯專家的思考過程：
+**Translation Agent** 旨在提升機器翻譯的品質。它採用獨特的「省思式工作流程」，模擬人類翻譯專家的思考過程：
 
 1.初始翻譯: 利用大型語言模型 (LLM) 產生初步譯文。\n
 2.反思與改進: 引導 LLM 反思自身譯文，提出改進建議，如同語言審核者般找出不足之處。\n
-3.優化輸出: 根據 LLM 的建議，優化譯文，使其更精確、流暢，並符合目標語言的慣用表達。\n
+3.優化輸出: 根據 LLM 的建議，醫療次專科角色，優化譯文，使其更精確、流暢，並符合目標語言的慣用表達。\n
 """)
 
 
