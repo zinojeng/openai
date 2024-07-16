@@ -257,7 +257,7 @@ def one_chunk_translate_text(model, source_text):
         if sentence_pairs:
             for pair in sentence_pairs:
                 st.write(f"Original: {pair['Original']}")
-                st.write(f"Translation: {pair['Translation']}\n")
+                st.write(f"Translation: {pair['Translation']}\n")  # 顯示每一句的翻譯結果
         else:
             st.write("No sentence pairs could be generated.")
         
