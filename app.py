@@ -298,7 +298,11 @@ if st.button("Translate"):
             with st.spinner("Translating... This may take a moment."):
                 result = one_chunk_translate_text("gpt-4o", source_text)
             st.success("Translation completed!")
-            
+        except Exception as e:
+            st.error(f"An error occurred during translation: {str(e)}")
+            return  # Exit the function if translation fails
+
+        try:
             # 下載按鈕
             result_text = (
                 f"Source Text:\n{source_text}\n\n"
@@ -326,6 +330,6 @@ if st.button("Translate"):
                 mime="text/plain"
             )
         except Exception as e:
-            st.error(f"An error occurred during translation: {str(e)}")
-        finally:
-            st.info("Execution finished.")
+            st.error(f"An error occurred while preparing the download: {str(e)}")
+
+        st.info("Execution finished.")
