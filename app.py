@@ -336,4 +336,4 @@ Estimated Cost: NTD {result['estimated_cost']:.2f}
 
 if st.button("Translate"):
     perform_translation()
-    st.info("Execution finished
+    st.info("Execution finished")
