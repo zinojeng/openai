@@ -10,6 +10,7 @@ import nltk
 import ssl
 import textract
 
+# SSL and NLTK setup
 try:
     _create_unverified_https_context = ssl._create_unverified_context
 except AttributeError:
@@ -70,7 +71,6 @@ with col3:
 
 # Input method selection
 input_method = st.radio("Choose input method:", ("Enter Text", "Upload PDF", "Upload TXT", "Upload Word Document"))
-st.empty()  # 添加这行来清除可能的缓存
 
 # Function to read PDF
 def read_pdf(file):
@@ -135,20 +135,14 @@ else:  # Enter Text
     source_text = st.text_area("Enter the text to translate:", height=200)
 
 def estimate_token_count(text):
-    encoding = tiktoken.encoding_for_model("gpt-4")
+    encoding = tiktoken.encoding_for_model("gpt-4o")
     return len(encoding.encode(text))
 
-def estimate_cost(input_tokens, output_tokens, use_batch_api=False):
-    if use_batch_api:
-        input_cost = (input_tokens / 1_000_000) * 2.50
-        output_cost = (output_tokens / 1_000_000) * 7.50
-    else:
-        input_cost = (input_tokens / 1_000_000) * 5.00
-        output_cost = (output_tokens / 1_000_000) * 15.00
+def estimate_cost(input_tokens, output_tokens):
+    input_cost = (input_tokens / 1_000_000) * 5.00
+    output_cost = (output_tokens / 1_000_000) * 15.00
     total_cost_usd = input_cost + output_cost
-    # 假設 1 USD = 30 NTD，您可以根據實際匯率調整
-    total_cost_ntd = total_cost_usd * 30
-    return total_cost_ntd
+    return total_cost_usd * 30  # Assuming 1 USD = 30 NTD
 
 
 # Translation functions
@@ -229,20 +223,16 @@ Provide your improved translation as a continuous text, without any additional f
     return get_completion(prompt, system_message, model=model)
 
 def create_sentence_pairs(source_text, translated_text):
-    source_sentences = sent_tokenize(source_text)
-    translated_sentences = sent_tokenize(translated_text)
+    source_sentences = nltk.sent_tokenize(source_text)
+    translated_sentences = nltk.sent_tokenize(translated_text)
     
-    # 確保兩個列表長度相同
     min_length = min(len(source_sentences), len(translated_sentences))
     
-    pairs = []
-    for i in range(min_length):
-        source = source_sentences[i].strip()
-        translation = translated_sentences[i].strip()
-        if source and translation:  # 確保兩者都不為空
-            pairs.append({"Original": source, "Translation": translation})
-    
-    return pairs
+    return [
+        {"Original": source.strip(), "Translation": translation.strip()}
+        for source, translation in zip(source_sentences[:min_length], translated_sentences[:min_length])
+        if source.strip() and translation.strip()
+    ]
 
 def one_chunk_translate_text(model, source_text):
     try:
@@ -311,24 +301,30 @@ def perform_translation():
     st.success("Translation completed!")
     
     # Prepare download button
-    result_text = (
-        f"Source Text:\n{source_text}\n\n"
-        f"Initial Translation:\n{result['initial_translation']}\n\n"
-        f"Translation Reflection:\n{result['reflection']}\n\n"
-        f"Improved Translation:\n{result['improved_translation']}\n\n"
-        "Sentence-by-Sentence Comparison:\n"
-    )
+    result_text = f"""Source Text:
+{source_text}
 
+Initial Translation:
+{result['initial_translation']}
+
+Translation Reflection:
+{result['reflection']}
+
+Improved Translation:
+{result['improved_translation']}
+
+Sentence-by-Sentence Comparison:
+"""
     for pair in result['sentence_pairs']:
         result_text += f"Original: {pair['Original']}\nTranslation: {pair['Translation']}\n\n"
 
-    result_text += (
-        f"Token Usage:\n"
-        f"Total tokens: {result['total_tokens']}\n"
-        f"Input tokens: {result['input_tokens']}\n"
-        f"Output tokens: {result['output_tokens']}\n\n"
-        f"Estimated Cost: NTD {result['estimated_cost']:.2f}\n"
-    )
+    result_text += f"""Token Usage:
+Total tokens: {result['total_tokens']}
+Input tokens: {result['input_tokens']}
+Output tokens: {result['output_tokens']}
+
+Estimated Cost: NTD {result['estimated_cost']:.2f}
+"""
 
     st.download_button(
         label="Download Translation Results",
@@ -338,9 +334,5 @@ def perform_translation():
     )
 
 if st.button("Translate"):
-    try:
-        perform_translation()
-    except Exception as e:
-        st.error(f"An unexpected error occurred: {str(e)}")
-    finally:
-        st.info("Execution finished.")
+    perform_translation()
+    st.info("Execution finished
