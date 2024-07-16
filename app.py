@@ -5,6 +5,11 @@ import PyPDF2
 import io
 from docx import Document
 import re
+import nltk  # Import nltk
+
+# Download 'punkt' resource if you haven't already
+nltk.download('punkt') 
+
 
 # Set page config
 st.set_page_config(page_title="Translation Agent", layout="wide")
