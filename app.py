@@ -228,13 +228,11 @@ def create_sentence_pairs(source_text, translated_text):
 
     sentence_pairs = []
     for i in range(min(len(source_sentences), len(translated_sentences))):
-        source_sentence = source_sentences[i].strip()
-        translated_sentence = translated_sentences[i].strip()
-        if source_sentence and translated_sentence:
-            sentence_pairs.append({
-                "Original": source_sentence,
-                "Translation": translated_sentence
-            })
+        sentence_pairs.append({
+            "Original": source_sentences[i],
+            "Translation": translated_sentences[i]
+        })
+
     return sentence_pairs
 
 def one_chunk_translate_text(model, source_text):
