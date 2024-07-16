@@ -96,7 +96,7 @@ def read_doc_or_docx(file):
                 full_text.append(para.text)
             return '\n'.join(full_text)
         elif file_extension == 'doc':
-            # 将文件内容保存到临时的字节流中
+            # 將文件內容保存到臨时的字节流中
             bytes_io = io.BytesIO(file.getvalue())
             # 使用 textract 读取 .doc 文件
             text = textract.process(bytes_io, extension='doc').decode('utf-8')
