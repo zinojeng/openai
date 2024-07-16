@@ -2,14 +2,12 @@ import streamlit as st
 import os
 from litellm import completion
 import PyPDF2
-import io
 import tempfile
 from docx import Document
 import re
 import tiktoken
 import nltk
 import ssl
-import textract
 import docx2txt
 
 
@@ -89,30 +87,30 @@ def read_txt(file):
     return file.getvalue().decode("utf-8")
 
 # Function to read Word Document
- def read_doc_or_docx(file):
-         file_extension = file.name.split('.')[-1].lower()
-         try:
-             if file_extension == 'docx':
-                 text = docx2txt.process(file)
-                 return text
-             elif file_extension == 'doc':
-                 # 使用 tempfile 建立一個臨時文件
-                 with tempfile.NamedTemporaryFile(delete=False, suffix='.doc') as temp_file:
-                     temp_file.write(file.getvalue())  # 將上傳文件的內容寫入臨時文件
-                     temp_file_path = temp_file.name
+def read_doc_or_docx(file):
+    file_extension = file.name.split('.')[-1].lower()
+    try:
+        if file_extension == 'docx':
+            text = docx2txt.process(file)
+            return text
+        elif file_extension == 'doc':
+            # 使用 tempfile 建立一個臨時文件
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.doc') as temp_file:
+                temp_file.write(file.getvalue())  # 將上傳文件的內容寫入臨時文件
+                temp_file_path = temp_file.name
 
-                 # 使用 docx2txt 读取 .doc 文件
-                 text = docx2txt.process(temp_file_path)
+            # 使用 docx2txt 读取 .doc 文件
+            text = docx2txt.process(temp_file_path)
 
-                 # 刪除臨時文件
-                 os.remove(temp_file_path)
+            # 刪除臨時文件
+            os.remove(temp_file_path)
 
-                 return text
-             else:
-                 raise ValueError(f"Unsupported file format: {file_extension}")
-         except Exception as e:
-             st.error(f"Error reading file: {str(e)}")
-             return ""
+            return text
+        else:
+            raise ValueError(f"Unsupported file format: {file_extension}")
+    except Exception as e:
+        st.error(f"Error reading file: {str(e)}")
+        return ""
 
 # Input text based on selected method
 if input_method == "Upload PDF":
