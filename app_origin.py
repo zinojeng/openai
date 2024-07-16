@@ -223,6 +223,18 @@ Provide your improved translation as a continuous text, without any additional f
 
     return get_completion(prompt, system_message, model=model)
 
+def create_sentence_pairs(source_text, translated_text):
+    source_sentences = nltk.sent_tokenize(source_text)
+    translated_sentences = nltk.sent_tokenize(translated_text)
+    
+    min_length = min(len(source_sentences), len(translated_sentences))
+    
+    return [
+        {"Original": source.strip(), "Translation": translation.strip()}
+        for source, translation in zip(source_sentences[:min_length], translated_sentences[:min_length])
+        if source.strip() and translation.strip()
+    ]
+
 def one_chunk_translate_text(model, source_text):
     try:
         st.subheader("Initial Translation")
@@ -236,6 +248,14 @@ def one_chunk_translate_text(model, source_text):
         st.subheader("Improved Translation")
         improved_translation = one_chunk_improve_translation(model, source_text, translation_1, reflection)
         st.write(improved_translation)
+
+        st.subheader("Sentence-by-Sentence Comparison")
+        sentence_pairs = create_sentence_pairs(source_text, improved_translation)
+        
+        if sentence_pairs:
+            st.table(sentence_pairs)
+        else:
+            st.write("No sentence pairs could be generated.")
         
         input_tokens = estimate_token_count(source_text)
         output_tokens = estimate_token_count(translation_1) + estimate_token_count(reflection) + estimate_token_count(improved_translation)
@@ -252,6 +272,7 @@ def one_chunk_translate_text(model, source_text):
             "initial_translation": translation_1,
             "reflection": reflection,
             "improved_translation": improved_translation,
+            "sentence_pairs": sentence_pairs,
             "total_tokens": total_tokens,
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
@@ -293,7 +314,12 @@ Translation Reflection:
 Improved Translation:
 {result['improved_translation']}
 
-Token Usage:
+Sentence-by-Sentence Comparison:
+"""
+    for pair in result['sentence_pairs']:
+        result_text += f"Original: {pair['Original']}\nTranslation: {pair['Translation']}\n\n"
+
+    result_text += f"""Token Usage:
 Total tokens: {result['total_tokens']}
 Input tokens: {result['input_tokens']}
 Output tokens: {result['output_tokens']}
