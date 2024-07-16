@@ -292,48 +292,55 @@ def one_chunk_translate_text(model, source_text):
         return None
 
 # Translate button
-if st.button("Translate"):
+def perform_translation():
     if not openai_api_key:
         st.error("Please enter your OpenAI API key in the sidebar.")
-    elif not source_text:
+        return
+    
+    if not source_text:
         st.error("Please provide some text to translate.")
-    else:
-        try:
-            with st.spinner("Translating... This may take a moment."):
-                result = one_chunk_translate_text("gpt-4o", source_text)
-            
-            if result:
-                st.success("Translation completed!")
+        return
+    
+    with st.spinner("Translating... This may take a moment."):
+        result = one_chunk_translate_text("gpt-4o", source_text)
+    
+    if result is None:
+        st.error("Translation failed. Please try again.")
+        return
+    
+    st.success("Translation completed!")
+    
+    # Prepare download button
+    result_text = (
+        f"Source Text:\n{source_text}\n\n"
+        f"Initial Translation:\n{result['initial_translation']}\n\n"
+        f"Translation Reflection:\n{result['reflection']}\n\n"
+        f"Improved Translation:\n{result['improved_translation']}\n\n"
+        "Sentence-by-Sentence Comparison:\n"
+    )
 
-                # 下載按鈕
-                result_text = (
-                    f"Source Text:\n{source_text}\n\n"
-                    f"Initial Translation:\n{result['initial_translation']}\n\n"
-                    f"Translation Reflection:\n{result['reflection']}\n\n"
-                    f"Improved Translation:\n{result['improved_translation']}\n\n"
-                    "Sentence-by-Sentence Comparison:\n"
-                )
+    for pair in result['sentence_pairs']:
+        result_text += f"Original: {pair['Original']}\nTranslation: {pair['Translation']}\n\n"
 
-                for pair in result['sentence_pairs']:
-                    result_text += f"Original: {pair['Original']}\nTranslation: {pair['Translation']}\n\n"
+    result_text += (
+        f"Token Usage:\n"
+        f"Total tokens: {result['total_tokens']}\n"
+        f"Input tokens: {result['input_tokens']}\n"
+        f"Output tokens: {result['output_tokens']}\n\n"
+        f"Estimated Cost: NTD {result['estimated_cost']:.2f}\n"
+    )
 
-                result_text += (
-                    f"Token Usage:\n"
-                    f"Total tokens: {result['total_tokens']}\n"
-                    f"Input tokens: {result['input_tokens']}\n"
-                    f"Output tokens: {result['output_tokens']}\n\n"
-                    f"Estimated Cost: NTD {result['estimated_cost']:.2f}\n"
-                )
+    st.download_button(
+        label="Download Translation Results",
+        data=result_text,
+        file_name="translation_results.txt",
+        mime="text/plain"
+    )
 
-                st.download_button(
-                    label="Download Translation Results",
-                    data=result_text,
-                    file_name="translation_results.txt",
-                    mime="text/plain"
-                )
-            else:
-                st.error("Translation failed. Please try again.")
-        except Exception as e:
-            st.error(f"An error occurred: {str(e)}")
-        finally:
-            st.info("Execution finished.")
+if st.button("Translate"):
+    try:
+        perform_translation()
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {str(e)}")
+    finally:
+        st.info("Execution finished.")
