@@ -6,12 +6,9 @@ import io
 from docx import Document
 import re
 import tiktoken
-
 import nltk
 import ssl
-from docx import Document
 import textract
-import io
 
 try:
     _create_unverified_https_context = ssl._create_unverified_context
@@ -21,6 +18,7 @@ else:
     ssl._create_default_https_context = _create_unverified_https_context
 
 nltk.download('punkt', quiet=True)
+
 
 # Set page config
 st.set_page_config(page_title="Translation Agent", layout="wide")
@@ -71,12 +69,8 @@ with col3:
     country = st.selectbox("Country/Region", country_options.get(target_lang, []))
 
 # Input method selection
-<<<<<<< HEAD
 input_method = st.radio("Choose input method:", ("Enter Text", "Upload PDF", "Upload TXT", "Upload Word Document"))
 st.empty()  # 添加这行来清除可能的缓存
-=======
-input_method = st.radio("Choose input method:", ("Upload PDF", "Upload TXT", "Upload Word Document", "Enter Text"))
->>>>>>> 5642ae2 (return previous to fix endter text problem)
 
 # Function to read PDF
 def read_pdf(file):
@@ -91,7 +85,6 @@ def read_txt(file):
     return file.getvalue().decode("utf-8")
 
 # Function to read Word Document
-<<<<<<< HEAD
 def read_doc_or_docx(file):
     file_extension = file.name.split('.')[-1].lower()
     try:
@@ -112,16 +105,6 @@ def read_doc_or_docx(file):
     except Exception as e:
         st.error(f"Error reading file: {str(e)}")
         return ""
-
-input_method = st.radio("Choose input method:", ("Enter Text", "Upload PDF", "Upload TXT", "Upload Word Document"))
-=======
-def read_docx(file):
-    doc = Document(file)
-    full_text = []
-    for para in doc.paragraphs:
-        full_text.append(para.text)
-    return '\n'.join(full_text)
->>>>>>> 5642ae2 (return previous to fix endter text problem)
 
 # Input text based on selected method
 if input_method == "Upload PDF":
