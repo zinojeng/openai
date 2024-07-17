@@ -7,8 +7,6 @@ import tiktoken
 import nltk
 import ssl
 import docx2txt
-import io
-import zipfile
 
 # SSL and NLTK setup
 try:
@@ -158,60 +156,7 @@ def read_doc_or_docx(file):
     except Exception as e:
         st.error(f"Error reading file: {str(e)}")
         return ""
-
-# 批量处理部分
-st.subheader("Batch Processing")
-st.write("Upload multiple files (2 or more) for batch processing.")
-
-uploaded_files = st.file_uploader("Choose files to upload (PDF, DOCX, TXT)", type=["pdf", "docx", "txt"], accept_multiple_files=True)
-
-if uploaded_files:
-    if len(uploaded_files) < 2:
-        st.warning("Please upload at least 2 files for batch processing.")
-    else:
-        st.success(f"{len(uploaded_files)} files uploaded successfully.")
-        if st.button("Process Batch"):
-            with st.spinner("Processing batch files..."):
-                zip_buffer = io.BytesIO()
-                with zipfile.ZipFile(zip_buffer, "w") as zip_file:
-                    for uploaded_file in uploaded_files:
-                        # 读取文件内容
-                        if uploaded_file.name.endswith('.pdf'):
-                            content = read_pdf(uploaded_file)
-                        elif uploaded_file.name.endswith('.docx'):
-                            content = read_doc_or_docx(uploaded_file)
-                        elif uploaded_file.name.endswith('.txt'):
-                            content = read_txt(uploaded_file)
-                        else:
-                            st.error(f"Unsupported file format: {uploaded_file.name}")
-                            continue
-                        
-                        # 执行翻译
-                        result = one_chunk_translate_text("gpt-4", content)
-                        
-                        if result:
-                            # 创建结果文本
-                            result_text = f"""Original Text:
-{content}
-
-Improved Translation:
-{result['improved_translation']}
-
-Estimated Cost: NTD {result['estimated_cost']:.2f}
-"""
-                            # 将结果添加到 ZIP 文件
-                            zip_file.writestr(f"{uploaded_file.name}_translated.txt", result_text)
-                
-                # 提供 ZIP 文件下载
-                zip_buffer.seek(0)
-                st.download_button(
-                    label="Download All Translations (ZIP)",
-                    data=zip_buffer,
-                    file_name="batch_translations.zip",
-                    mime="application/zip"
-                )
-
-
+    
 # Input text based on selected method
 if input_method == "Upload PDF":
     uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
