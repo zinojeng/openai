@@ -129,7 +129,7 @@ specialties = {
 }
 
 # 專科選擇
-st.subheader("選擇專科 (可選)")
+st.subheader("Select a Medical Specialty (Optional)")
 selected_department = st.selectbox("選擇科別 (可選)", ["無"] + list(specialties.keys()))
 
 if selected_department != "無":
