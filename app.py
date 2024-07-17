@@ -48,7 +48,8 @@ st.sidebar.markdown("""
 
 
 # Language selection
-st.header("Select Languages")
+st.title("Translation Agent: Agentic translation using reflection workflow")
+st.subheader("Select Languages")
 col1, col2, col3 = st.columns(3)
 
 with col1:
