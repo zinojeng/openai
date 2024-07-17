@@ -7,6 +7,8 @@ import tiktoken
 import nltk
 import ssl
 import docx2txt
+import io
+import zipfile
 
 # SSL and NLTK setup
 try:
@@ -35,7 +37,7 @@ if openai_api_key:
     os.environ["OPENAI_API_KEY"] = openai_api_key
 
 st.sidebar.markdown("""
-**Coded by:** Tseng Yao Hsien 
+**Modified by:** Tseng Yao Hsien 
 **Contact:** zinojeng@gmail.com  
 **Reference:** Andrew Ng's AI Agent System for Language Translation [https://github.com/andrewyng/translation-agent](https://github.com/andrewyng/translation-agent)
 
@@ -139,7 +141,53 @@ else:
 
 # Input method selection
 input_method = st.radio("Choose input method:", ("Enter Text", "Upload PDF", "Upload TXT", "Upload Word Document"))
-st.empty()  # 添加这行来清除可能的缓存
+
+# 在这里插入新的批量处理代码
+if input_method in ["Upload PDF", "Upload TXT", "Upload Word Document"]:
+    st.write("---")
+    batch_process = st.button("Batch Process")
+
+    if batch_process:
+        uploaded_files = st.file_uploader("Choose files to upload", type=["pdf", "docx", "txt"], accept_multiple_files=True)
+        
+        if uploaded_files:
+            with st.spinner("Processing batch files..."):
+                zip_buffer = io.BytesIO()
+                with zipfile.ZipFile(zip_buffer, "w") as zip_file:
+                    for uploaded_file in uploaded_files:
+                        # 读取文件内容
+                        if uploaded_file.name.endswith('.pdf'):
+                            content = read_pdf(uploaded_file)
+                        elif uploaded_file.name.endswith('.docx'):
+                            content = read_doc_or_docx(uploaded_file)
+                        elif uploaded_file.name.endswith('.txt'):
+                            content = read_txt(uploaded_file)
+                        
+                        # 执行翻译
+                        result = one_chunk_translate_text("gpt-4", content)
+                        
+                        if result:
+                            # 创建结果文本
+                            result_text = f"""Original Text:
+{content}
+
+Improved Translation:
+{result['improved_translation']}
+
+Estimated Cost: NTD {result['estimated_cost']:.2f}
+"""
+                            # 将结果添加到 ZIP 文件
+                            zip_file.writestr(f"{uploaded_file.name}_translated.txt", result_text)
+                
+                # 提供 ZIP 文件下载
+                zip_buffer.seek(0)
+                st.download_button(
+                    label="Download All Translations (ZIP)",
+                    data=zip_buffer,
+                    file_name="batch_translations.zip",
+                    mime="application/zip"
+                )
+
 
 # Function to read PDF
 def read_pdf(file):

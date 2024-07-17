@@ -6,3 +6,4 @@ tiktoken
 nltk==3.8.1
 python-docx
 textract
+docx2txt
