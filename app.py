@@ -142,15 +142,19 @@ else:
 # Input method selection
 input_method = st.radio("Choose input method:", ("Enter Text", "Upload PDF", "Upload TXT", "Upload Word Document"))
 
-# 在这里插入新的批量处理代码
-if input_method in ["Upload PDF", "Upload TXT", "Upload Word Document"]:
-    st.write("---")
-    batch_process = st.button("Batch Process")
+# 在文件上传部分之后添加批量处理按钮
+st.write("---")
+st.subheader("Batch Processing")
+st.write("Upload multiple files (2 or more) for batch processing.")
 
-    if batch_process:
-        uploaded_files = st.file_uploader("Choose files to upload", type=["pdf", "docx", "txt"], accept_multiple_files=True)
-        
-        if uploaded_files:
+uploaded_files = st.file_uploader("Choose files to upload (PDF, DOCX, TXT)", type=["pdf", "docx", "txt"], accept_multiple_files=True)
+
+if uploaded_files:
+    if len(uploaded_files) < 2:
+        st.warning("Please upload at least 2 files for batch processing.")
+    else:
+        st.success(f"{len(uploaded_files)} files uploaded successfully.")
+        if st.button("Process Batch"):
             with st.spinner("Processing batch files..."):
                 zip_buffer = io.BytesIO()
                 with zipfile.ZipFile(zip_buffer, "w") as zip_file:
@@ -162,6 +166,9 @@ if input_method in ["Upload PDF", "Upload TXT", "Upload Word Document"]:
                             content = read_doc_or_docx(uploaded_file)
                         elif uploaded_file.name.endswith('.txt'):
                             content = read_txt(uploaded_file)
+                        else:
+                            st.error(f"Unsupported file format: {uploaded_file.name}")
+                            continue
                         
                         # 执行翻译
                         result = one_chunk_translate_text("gpt-4", content)
@@ -187,7 +194,6 @@ Estimated Cost: NTD {result['estimated_cost']:.2f}
                     file_name="batch_translations.zip",
                     mime="application/zip"
                 )
-
 
 # Function to read PDF
 def read_pdf(file):
