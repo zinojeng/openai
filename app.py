@@ -142,8 +142,24 @@ else:
 # Input method selection
 input_method = st.radio("Choose input method:", ("Enter Text", "Upload PDF", "Upload TXT", "Upload Word Document"))
 
-# 在文件上传部分之后添加批量处理按钮
-st.write("---")
+# Function to read TXT
+def read_txt(file):
+    return file.getvalue().decode("utf-8")
+
+# Function to read Word Document
+def read_doc_or_docx(file):
+    file_extension = file.name.split('.')[-1].lower()
+    try:
+        if file_extension == 'docx':
+            text = docx2txt.process(file)
+            return text
+        else:
+            raise ValueError(f"Unsupported file format: {file_extension}")
+    except Exception as e:
+        st.error(f"Error reading file: {str(e)}")
+        return ""
+
+# 批量处理部分
 st.subheader("Batch Processing")
 st.write("Upload multiple files (2 or more) for batch processing.")
 
@@ -195,30 +211,6 @@ Estimated Cost: NTD {result['estimated_cost']:.2f}
                     mime="application/zip"
                 )
 
-# Function to read PDF
-def read_pdf(file):
-    pdf_reader = PyPDF2.PdfReader(file)
-    text = ""
-    for page in pdf_reader.pages:
-        text += page.extract_text()
-    return text
-
-# Function to read TXT
-def read_txt(file):
-    return file.getvalue().decode("utf-8")
-
-# Function to read Word Document
-def read_doc_or_docx(file):
-    file_extension = file.name.split('.')[-1].lower()
-    try:
-        if file_extension == 'docx':
-            text = docx2txt.process(file)
-            return text
-        else:
-            raise ValueError(f"Unsupported file format: {file_extension}")
-    except Exception as e:
-        st.error(f"Error reading file: {str(e)}")
-        return ""
 
 # Input text based on selected method
 if input_method == "Upload PDF":
