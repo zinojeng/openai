@@ -22,11 +22,6 @@ else:
     ssl._create_default_https_context = _create_unverified_https_context
 nltk.download('punkt', quiet=True)
 
-# 常量定义
-MODEL_NAME = "gpt-4o-mini"
-INPUT_COST_PER_1M_TOKENS = 0.075
-OUTPUT_COST_PER_1M_TOKENS = 0.3
-USD_TO_NTD_RATE = 30
 
 # Set page config
 st.set_page_config(page_title="Translation Agent", layout="wide")
@@ -37,11 +32,43 @@ openai_api_key = st.sidebar.text_input(
     label="Enter your OpenAI API Key:",
     type='password',
     placeholder="Ex: sk-2twmA88un4...",
-    help="You can get your API key from https://platform.openai.com/account/api-keys/"
 )
 
 if openai_api_key:
     os.environ["OPENAI_API_KEY"] = openai_api_key
+
+
+# 常量定义
+USD_TO_NTD_RATE = 30
+
+# Sidebar for model selection
+model_options = {
+    "gpt-4o-mini": {"input_cost": 0.075, "output_cost": 0.300},
+    "gpt-4o": {"input_cost": 2.5, "output_cost": 7.5},
+    "GPT-3.5 Turbo": {"input_cost": 0.25, "output_cost": 0.75}
+}
+
+selected_model = st.sidebar.selectbox(
+    "Select Translation Model:",
+    list(model_options.keys()),
+    help=(
+        "Batch input/output cost:\n"
+        "gpt-4o: 2.5/7.5\n"
+        "gpt-4o-mini: 0.075/0.3\n"
+        "gpt-3.5-turbo: 0.25/0.75\n"
+        "You can get your API key from https://platform.openai.com/account/api-keys/"
+    )
+)
+
+# 根据所选模型重定变量
+MODEL_NAME = selected_model
+INPUT_COST_PER_1K_TOKENS = model_options[selected_model]["input_cost"]
+OUTPUT_COST_PER_1K_TOKENS = model_options[selected_model]["output_cost"]
+
+# 计算价格
+input_cost_ntd = INPUT_COST_PER_1K_TOKENS * USD_TO_NTD_RATE
+output_cost_ntd = OUTPUT_COST_PER_1K_TOKENS * USD_TO_NTD_RATE
+
 
 st.sidebar.markdown("""
 **Modified by:** Tseng Yao Hsien \n
@@ -312,7 +339,7 @@ def create_semantic_chunker(openai_api_key: str):
     return SemanticChunker(
         embeddings,
         breakpoint_threshold_type="percentile",
-        breakpoint_threshold_amount=0.2
+        breakpoint_threshold_amount=0.05
     )
 
 # 修改split_text函数
@@ -415,7 +442,7 @@ def perform_translation():
             st.subheader("Token Usage and Cost Estimation")
             st.write(f"Total tokens used: {total_tokens}")
             st.write(f"Estimated cost: NTD {estimated_cost:.3f}")
-            st.write("Model GPT-4o-mini: US$0.075/0.03 per 1M tokens for input/output, respectively")
+            st.write(f"Model: {MODEL_NAME}: US{INPUT_COST_PER_1K_TOKENS}/US{OUTPUT_COST_PER_1K_TOKENS} per 1K tokens for batch API input/output, respectively")
 
         st.success("Translation completed!")
         
