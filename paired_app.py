@@ -22,9 +22,16 @@ else:
     ssl._create_default_https_context = _create_unverified_https_context
 nltk.download('punkt', quiet=True)
 
-
 # Set page config
 st.set_page_config(page_title="Translation Agent", layout="wide")
+
+# Add custom CSS to hide the GitHub icon
+hide_github_icon = """
+#GithubIcon {
+  visibility: hidden;
+}
+"""
+st.markdown(hide_github_icon, unsafe_allow_html=True)
 
 # Sidebar for API key input
 st.sidebar.title("Configuration")
@@ -104,7 +111,7 @@ with col3:
     country_options = {
         "Traditional Chinese": ["Taiwan", "Hong Kong"],
         "Simplified Chinese": ["China", "Singapore"],
-        "English": ["USA", "UK", "Australia", "Canada"],
+        "English": ["USA", "UK", "Australia", "Canada", "Philippines"],
         "Spanish": ["Spain", "Mexico", "Argentina"],
         "French": ["France", "Canada", "Belgium"],
         "German": ["Germany", "Austria", "Switzerland"],
