@@ -68,7 +68,7 @@ with col3:
     country_options = {
         "Traditional Chinese": ["Taiwan", "Hong Kong"],
         "Simplified Chinese": ["China", "Singapore"],
-        "English": ["USA", "UK", "Australia", "Canada"],
+        "English": ["USA", "UK", "Australia", "Canada", "Philippines"],        
         "Spanish": ["Spain", "Mexico", "Argentina"],
         "French": ["France", "Canada", "Belgium"],
         "German": ["Germany", "Austria", "Switzerland"],
