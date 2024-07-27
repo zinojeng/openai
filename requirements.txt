@@ -9,3 +9,4 @@ textract
 docx2txt
 langchain_experimental 
 langchain_openai
+llama-index==0.4.3
