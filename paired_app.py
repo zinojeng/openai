@@ -9,8 +9,17 @@ import ssl
 import docx2txt
 
 from typing import List, Tuple
-from langchain_experimental.text_splitter import SemanticChunker
-from langchain_openai import OpenAIEmbeddings
+from llama_index.core.node_parser import (
+    SentenceSplitter,
+    SemanticSplitterNodeParser,
+)
+from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.core import Document as LlamaDocument
+from llama_index.core import Document
+
+
+
+import diff_match_patch as dmp_module
 
 
 # SSL and NLTK setup
@@ -25,11 +34,19 @@ nltk.download('punkt', quiet=True)
 # Set page config
 st.set_page_config(page_title="Translation Agent", layout="wide")
 
-# Add custom CSS to hide the GitHub icon
+# 添加自定义HTML，包含id为"GithubIcon"的元素
+st.markdown("""
+<div id="GithubIcon">
+  <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" width="50" />
+</div>
+""", unsafe_allow_html=True)
+# 添加自定义CSS以隐藏GitHub图标
 hide_github_icon = """
+<style>
 #GithubIcon {
   visibility: hidden;
 }
+</style>
 """
 st.markdown(hide_github_icon, unsafe_allow_html=True)
 
@@ -339,35 +356,13 @@ Provide your improved translation as a continuous text, without any additional f
 
     return get_completion(prompt, system_message, model=model)
 
-
-# 创建SemanticChunker
-def create_semantic_chunker(openai_api_key: str):
-    embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-    return SemanticChunker(
-        embeddings,
-        breakpoint_threshold_type="percentile",
-        breakpoint_threshold_amount=0.05
-    )
-
-# 修改split_text函数
-def split_text(text: str, chunker: SemanticChunker) -> List[str]:
-    return chunker.split_text(text)
-
-
-def process_chunk(model: str, chunk: str) -> Tuple[str, str]:
-    initial = one_chunk_initial_translation(model, chunk)
-    reflection = one_chunk_reflect_on_translation(model, chunk, initial)
-    improved = one_chunk_improve_translation(model, chunk, initial, reflection)
-    return chunk, improved
-
-def paired_translation(model: str, source_text: str, chunker: SemanticChunker) -> List[Tuple[str, str]]:
-    chunks = split_text(source_text, chunker)
-    return [process_chunk(model, chunk) for chunk in chunks]
-
 def one_chunk_translate_text(model, source_text):
     try:
+        # 初始翻译
         translation_1 = one_chunk_initial_translation(model, source_text)
+        # 反思翻译
         reflection = one_chunk_reflect_on_translation(model, source_text, translation_1)
+        # 改进翻译
         improved_translation = one_chunk_improve_translation(model, source_text, translation_1, reflection)
 
         return {
@@ -380,20 +375,60 @@ def one_chunk_translate_text(model, source_text):
         return None
 
 
+# 定义语义分割器
+def create_semantic_splitter(breakpoint_percentile_threshold: int = 95):
+    embed_model = OpenAIEmbedding()
+    splitter = SemanticSplitterNodeParser(
+        buffer_size=1, breakpoint_percentile_threshold=breakpoint_percentile_threshold, embed_model=embed_model
+    )
+    return splitter
 
+def split_text_with_semantic_splitter(text: str, splitter) -> List[str]:
+    document = Document(text=text)  # 使用关键字参数创建Document对象
+    nodes = splitter.get_nodes_from_documents([document])
+    return [node.text for node in nodes]
+    
 
 def display_paired_translations(paired_translations: List[Tuple[str, str]]):
-    st.subheader("Sentence-to-Sentence Translation \n (by Semantic Chunks 語意分塊)")
-
+    st.markdown("**Sentence-To-Sentence Translation:**")
     for i, (original, translation) in enumerate(paired_translations, 1):
-        
-        #st.markdown("**原文:**")
+        st.write(f"**Original {i}:**")
         st.write(original)
-        
-        #st.markdown("**譯文:**")
+        st.write(f"**Translation {i}:**")
         st.write(translation)
-        
-        #st.markdown("<hr style='margin-top: 20px; margin-bottom: 20px;'>", unsafe_allow_html=True)
+        st.markdown("---")
+
+
+
+# def display_paired_translations(paired_translations: List[Tuple[str, str]]):
+#     st.markdown("**Sentence-To-Sentence Translation:**")
+
+#     for i, (original, translation) in enumerate(paired_translations, 1):
+#         st.write(f"**Original {i}:**")
+#         st.write(original)
+#         st.write(f"**Translation {i}:**")
+#         st.write(translation)
+#         st.markdown("---")
+
+# def paired_translation(model: str, source_text: str, chunker: str = None) -> List[Tuple[str, str]]:
+#     chunks = split_text(source_text, chunker)
+#     return [process_chunk(model, chunk) for chunk in chunks]
+
+
+#Compared text difference 
+def compare_texts(source_text, improved_translation):
+    # 創建 diff_match_patch 物件
+    dmp = dmp_module.diff_match_patch()
+
+    # 生成差異
+    diff = dmp.diff_main(source_text, improved_translation)
+    dmp.diff_cleanupSemantic(diff)
+
+    # 輸出差異為 HTML
+    html_diff = dmp.diff_prettyHtml(diff)
+
+    # 在 Streamlit 中顯示 HTML 格式的比較結果
+    st.markdown(html_diff, unsafe_allow_html=True)
 
 
  # 修改 perform_translation 函数
@@ -407,8 +442,10 @@ def perform_translation():
         return
     
     try:
-        chunker = create_semantic_chunker(openai_api_key)
-        
+        # chunker = create_semchunk_chunker()
+        # chunker = create_semchunk_splitter(chunk_size=100)
+
+
         with st.spinner("Translating... This may take a moment."):
             # 执行完整文本的翻译
             full_translation_result = one_chunk_translate_text("gpt-4o-mini", source_text)
@@ -425,24 +462,44 @@ def perform_translation():
             st.markdown("**Translation Reflection:**")
             st.write(full_translation_result["reflection"])
             
-            st.markdown("**Improved Translation:**")
-            st.write(full_translation_result["improved_translation"])
+            # st.markdown("**Improved Translation:**")
+            # st.write(full_translation_result["improved_translation"])
+
+            # 呼叫 compare_texts 函數進行比較
+            st.markdown("**Compare text differences:**")
+            compare_texts(full_translation_result["initial_translation"], full_translation_result["improved_translation"])
+
+            # 顯示完整文本的翻譯結果
+            st.write("**Final Translation Results**")
+            st.markdown(f"**原文:**\n{source_text}")
+            st.markdown(f"**譯文:**\n{full_translation_result['improved_translation']}")
+
+
+            # # 创建语义分割器
+            # splitter = create_semantic_splitter(breakpoint_percentile_threshold=10)
             
-            # 执行分段翻译
-            paired_results = paired_translation("gpt-4o-mini", source_text, chunker)
-            if not paired_results:
-                st.error("Paired translation failed. Please try again.")
-                return
+            # # 对源文本和改进后的翻译进行分块
+            # source_chunks = split_text_with_semantic_splitter(source_text, splitter)
+            # improved_chunks = split_text_with_semantic_splitter(full_translation_result['improved_translation'], splitter)
+
+            # # # 确保中文和英文分块数量一致
+            # # if len(source_chunks) != len(improved_chunks):
+            # #     st.error("The number of sentences in the source text and the translated text do not match. Please check the segmentation.")
+            # #     return
+
+            # # 确保源文本和翻译文本的分块结果配对显示
+            # paired_results = list(zip(source_chunks, improved_chunks))
+
+            # # 显示分段翻译结果
+            # display_paired_translations(paired_results)
             
-            # 显示分段翻译结果
-            display_paired_translations(paired_results)
-            
+      
             # 计算 token 使用量和估算成本
-            input_tokens = estimate_token_count(source_text) + sum(estimate_token_count(chunk) for chunk, _ in paired_results)
+            input_tokens = estimate_token_count(source_text)
             output_tokens = (estimate_token_count(full_translation_result['initial_translation']) + 
                              estimate_token_count(full_translation_result['reflection']) + 
-                             estimate_token_count(full_translation_result['improved_translation']) + 
-                             sum(estimate_token_count(translation) for _, translation in paired_results))
+                             estimate_token_count(full_translation_result['improved_translation']))
+                            #  sum(estimate_token_count(translation) for _, translation in paired_results))
             total_tokens = input_tokens + output_tokens
             estimated_cost = estimate_cost(input_tokens, output_tokens)
 
@@ -457,9 +514,9 @@ def perform_translation():
         result_text = "Source Text, Improved Translations and Paired Translation:\n\n"
         result_text += f"原文:\n{source_text}\n\n"
         result_text += f"改善後譯文 (Full Text):\n{full_translation_result['improved_translation']}\n\n"
-        result_text += "Sentence-by-Sentence Translation:\n\n"
-        for original, translation in paired_results:
-            result_text += f"{original}\n{translation}\n\n"
+        # result_text += "Sentence-by-Sentence Translation:\n\n"
+
+
         result_text += f"\nEstimated Cost: NTD {estimated_cost:.3f}"
 
         st.download_button(
@@ -472,9 +529,9 @@ def perform_translation():
         st.error(f"An error occurred during translation: {str(e)}")
         st.exception(e)  
         
+
 # 主函数
 def main():
-  
     if st.button("Translate"):
         perform_translation()
         st.info("Execution finished")
