@@ -14,7 +14,7 @@ from llama_index.core.node_parser import (
     SemanticSplitterNodeParser,
 )
 from llama_index.embeddings.openai import OpenAIEmbedding
-from llama_index.core import Document as LlamaDocument
+# from llama_index.core import Document as LlamaDocument
 from llama_index.core import Document
 
 
