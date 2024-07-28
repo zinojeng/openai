@@ -7,6 +7,6 @@ nltk==3.8.1
 python-docx
 textract
 docx2txt
-langchain_experimental 
-langchain_openai
+# langchain_experimental 
+# langchain_openai
 llama-index==0.4.3
