@@ -8,6 +8,6 @@ docx2txt
 semchunk==0.1.0
 diff-match-patch
 openai==0.10.2
-llama-index==0.1.8
 litellm==0.2.0
 httpx==0.19.0
+llama-index==0.6.38
