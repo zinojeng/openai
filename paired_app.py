@@ -37,11 +37,13 @@ st.markdown(
     .viewerBadge_text__1JaDK {
         display: none;
     }
+    .stDeployButton {
+        visibility: hidden;
+    }
     </style>
     """,
     unsafe_allow_html=True
 )
-
 
 # Sidebar for API key input
 st.sidebar.title("Configuration")
