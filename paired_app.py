@@ -31,7 +31,7 @@ st.set_page_config(page_title="Translation Agent", layout="wide")
 
 # 添加自定义HTML，包含id为"GithubIcon"的元素
 st.markdown("""
-<div id="GithubIcon">
+<div id="GithubIcon" style="display: none;">
   <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" width="50" />
 </div>
 """, unsafe_allow_html=True)
@@ -45,6 +45,7 @@ hide_github_icon = """
 </style>
 """
 st.markdown(hide_github_icon, unsafe_allow_html=True)
+
 
 # Sidebar for API key input
 st.sidebar.title("Configuration")
