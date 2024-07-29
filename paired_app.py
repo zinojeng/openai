@@ -1,6 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
-
 import os
 from litellm import completion
 import PyPDF2
@@ -31,21 +29,18 @@ nltk.download('punkt', quiet=True)
 # Set page config
 st.set_page_config(page_title="Translation Agent", layout="wide")
 
-
-# 定义包含 GitHub 图标的 HTML 代码
-html_code = """
-<div id="GithubIcon">
-  <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" width="50" />
-</div>
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  document.getElementById('GithubIcon').style.display = 'none';
-});
-</script>
-"""
-
-# 使用 Streamlit 的组件功能嵌入自定义 HTML
-components.html(html_code, height=100)
+st.markdown(
+    """
+    <style>
+    .css-1jc7ptx, .e1ewe7hr3, .viewerBadge_container__1QSob,
+    .styles_viewerBadge__1yB5_, .viewerBadge_link__1S137,
+    .viewerBadge_text__1JaDK {
+        display: none;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 
 # Sidebar for API key input
