@@ -39,7 +39,9 @@ st.markdown("""
 # 使用JavaScript隱藏GitHub圖標
 hide_github_icon_js = """
 <script>
-document.getElementById('GithubIcon').style.display = 'none';
+document.addEventListener("DOMContentLoaded", function() {
+  document.getElementById('GithubIcon').style.display = 'none';
+});
 </script>
 """
 st.markdown(hide_github_icon_js, unsafe_allow_html=True)
