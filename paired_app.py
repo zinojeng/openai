@@ -7,9 +7,6 @@ import tiktoken
 import nltk
 import ssl
 import diff_match_patch as dmp_module
-
-import docx2txt
-
 from typing import List, Tuple
 # from llama_index.core.node_parser import (
 #     SentenceSplitter,
@@ -19,12 +16,6 @@ from typing import List, Tuple
 # from llama_index.embeddings.openai import OpenAIEmbedding
 # import openai
 # import semchunk
-
-
-
-
-import diff_match_patch as dmp_module
-
 
 # SSL and NLTK setup
 try:
@@ -38,13 +29,13 @@ nltk.download('punkt', quiet=True)
 # Set page config
 st.set_page_config(page_title="Translation Agent", layout="wide")
 
-# # 添加自定义HTML，包含id为"GithubIcon"的元素
-# st.markdown("""
-# <div id="GithubIcon">
-#   <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" width="50" />
-# </div>
-# """, unsafe_allow_html=True)
-# 添加自定义CSS以隐藏GitHub图标
+# 添加自定义HTML，包含id为"GithubIcon"的元素
+st.markdown("""
+<div id="GithubIcon">
+  <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" width="50" />
+</div>
+""", unsafe_allow_html=True)
+#添加自定义CSS以隐藏GitHub图标
 hide_github_icon = """
 <style>
 #GithubIcon {
