@@ -35,11 +35,12 @@ st.markdown("""
   <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" width="50" />
 </div>
 """, unsafe_allow_html=True)
-#添加自定义CSS以隐藏GitHub图标
+
+# 添加自定义CSS以隐藏GitHub图标
 hide_github_icon = """
 <style>
 #GithubIcon {
-  visibility: hidden;
+  display: none;
 }
 </style>
 """
