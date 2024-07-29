@@ -44,6 +44,13 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+hide_github_icon = """
+#GithubIcon {
+  visibility: hidden;
+}
+"""
+st.markdown(hide_github_icon, unsafe_allow_html=True)
+
 
 # Sidebar for API key input
 st.sidebar.title("Configuration")
