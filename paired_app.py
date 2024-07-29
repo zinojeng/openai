@@ -30,21 +30,15 @@ nltk.download('punkt', quiet=True)
 st.set_page_config(page_title="Translation Agent", layout="wide")
 
 # 添加自定义HTML，包含id为"GithubIcon"的元素
-st.markdown("""
-<div id="GithubIcon">
-  <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" width="50" />
-</div>
-""", unsafe_allow_html=True)
-
-# 使用JavaScript隱藏GitHub圖標
-hide_github_icon_js = """
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  document.getElementById('GithubIcon').style.display = 'none';
-});
-</script>
-"""
-st.markdown(hide_github_icon_js, unsafe_allow_html=True)
+st.markdown(
+    """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 
 # Sidebar for API key input
