@@ -41,6 +41,7 @@ openai_api_key = st.sidebar.text_input(
     label="Enter your OpenAI API Key:",
     type='password',
     placeholder="Ex: sk-2twmA88un4...",
+    help="You can get your API key from https://platform.openai.com/account/api-keys/"
 )
 
 if openai_api_key:
@@ -65,7 +66,6 @@ selected_model = st.sidebar.selectbox(
         "gpt-4o: 2.5/7.5\n"
         "gpt-4o-mini: 0.075/0.3\n"
         "gpt-3.5-turbo: 0.25/0.75\n"
-        "You can get your API key from https://platform.openai.com/account/api-keys/"
     )
 )
 
