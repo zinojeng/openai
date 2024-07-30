@@ -21,6 +21,13 @@ nltk.download('punkt', quiet=True)
 # Set page config
 st.set_page_config(page_title="Translation Agent", layout="wide")
 
+# Add custom CSS to hide the GitHub icon
+hide_github_icon = """
+#GithubIcon {
+  visibility: hidden;
+}
+"""
+st.markdown(hide_github_icon, unsafe_allow_html=True)
 
 # Sidebar for API key input
 st.sidebar.title("Configuration")
