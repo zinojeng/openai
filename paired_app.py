@@ -21,7 +21,7 @@ nltk.download('punkt', quiet=True)
 # Set page config
 st.set_page_config(page_title="Translation Agent", layout="wide")
 
-# Add custom CSS to hide the GitHub icon
+#Add custom CSS to hide the GitHub icon
 hide_github_icon = """
     <style>
     .css-1jc7ptx, .e1ewe7hr3, .viewerBadge_container__1QSob, 
@@ -91,7 +91,7 @@ st.sidebar.markdown("""
 3.**優化輸出**: 根據 LLM 的建議，或醫療次專科角色，優化譯文，使其更精確、流暢，並符合目標語言的慣用表達。\n
 """)
 
-
+    
 # Language selection
 st.title("Translation Agent: Agentic translation using reflection workflow")
 st.subheader("Select Languages")
@@ -125,6 +125,39 @@ with col3:
         "Thai": ["Thailand"]
     }
     country = st.selectbox("Country/Region", country_options.get(target_lang, []))
+
+
+# 添加翻譯模式選項
+st.subheader("Select Translation Mode")
+
+translation_modes = [
+    "Standard", "Fluency", "Natural", "Formal", "Academic",
+    "Simple", "Creative", "Expand", "Shorten"
+]
+
+selected_translation_mode = st.selectbox(
+    "Select Translation Mode:",
+    translation_modes,
+    help="Choose the translation mode that best suits your needs."
+)
+
+# 設置不同模式的 prompts 和 temperature
+prompts = {
+    "Standard": {"prompt": "Translate the following text with standard fluency: ", "temperature": 0.5},
+    "Fluency": {"prompt": "Translate the following text, ensuring high fluency and readability: ", "temperature": 0.7},
+    "Natural": {"prompt": "Translate the following text in a natural and conversational tone: ", "temperature": 0.9},
+    "Formal": {"prompt": "Translate the following text in a formal and professional tone: ", "temperature": 0.3},
+    "Academic": {"prompt": "Translate the following text in an academic and scholarly style: ", "temperature": 0.2},
+    "Simple": {"prompt": "Translate the following text using simple and clear language: ", "temperature": 0.5},
+    "Creative": {"prompt": "Translate the following text with a creative and engaging style: ", "temperature": 1.0},
+    "Expand": {"prompt": "Translate the following text, expanding on ideas where necessary: ", "temperature": 0.8},
+    "Shorten": {"prompt": "Translate the following text, shortening the content where possible: ", "temperature": 0.5}
+}
+
+# 根據選擇的模式設置 prompt 和 temperature
+selected_prompt_template = prompts[selected_translation_mode]["prompt"]
+selected_temperature = prompts[selected_translation_mode]["temperature"]
+
 
 # 專科介紹
 specialties = {
@@ -172,14 +205,13 @@ specialties = {
 }
 
 # 專科選擇
-st.subheader("Select a Medical Specialty (Optional)")
+st.write("Select a Medical Specialty (Optional)")
 selected_department = st.selectbox("選擇科別 (可選)", ["無"] + list(specialties.keys()))
 
 if selected_department != "無":
     selected_specialty = st.selectbox("選擇專科 (可選)", ["無"] + specialties[selected_department])
 else:
     selected_specialty = "無"
-
 
 # Input method selection
 input_method = st.radio("Choose input method:", ("Enter Text", "Upload PDF", "Upload TXT", "Upload Word Document"))
@@ -247,7 +279,7 @@ else:  # Enter Text
 
 
 def estimate_token_count(text):
-    encoding = tiktoken.encoding_for_model("gpt-4o-mini")
+    encoding = tiktoken.encoding_for_model(MODEL_NAME)
     return len(encoding.encode(text))
 
 
@@ -259,25 +291,36 @@ def estimate_cost(input_tokens, output_tokens):
 
 
 # Translation functions
-def get_completion(user_prompt, system_message="You are a helpful assistant.", model=MODEL_NAME):
+def get_completion(user_prompt, system_message="You are a helpful assistant.", model=MODEL_NAME, temperature=0.2):
     messages = [
         {"role": "system", "content": system_message},
         {"role": "user", "content": user_prompt},
     ]
-    response = completion(model=model, messages=messages)
+    response = completion(model=model, messages=messages, temperature=temperature)
     return response["choices"][0]["message"]["content"]
 
 def one_chunk_initial_translation(model, source_text):
     system_message = f"You are an expert medical translator, specializing in translating medical instructions and educational materials from {source_lang} to {target_lang}."
-    translation_prompt = f"""This is an {source_lang} to {target_lang} translation, please provide the {target_lang} translation for this text. \
+    translation_prompt = f"""This is a translation from {source_lang} to {target_lang}. {selected_prompt_template} \
 Do not provide any explanations or text apart from the translation.
 {source_lang}: {source_text}
 
 {target_lang}:"""
-    return get_completion(translation_prompt, system_message=system_message, model=model)
+    return get_completion(translation_prompt, system_message=system_message, model=model, temperature=selected_temperature)
+
+
+# def one_chunk_initial_translation_original(model, source_text):
+#     system_message = f"You are an expert medical translator, specializing in translating medical instructions and educational materials from {source_lang} to {target_lang}."
+#     translation_prompt = f"""This is an {source_lang} to {target_lang} translation, please provide the {target_lang} translation for this text. \
+# Do not provide any explanations or text apart from the translation.
+# {source_lang}: {source_text}
+
+# {target_lang}:"""
+#     return get_completion(translation_prompt, system_message=system_message, model=model)
 
 def one_chunk_reflect_on_translation(model, source_text, translation_1):
-    system_message = f"You are an expert medical translator specializing in translation from {source_lang} to {target_lang}. \
+    system_message = f"{selected_prompt_template} \
+    You are an expert medical translator specializing in translation from {source_lang} to {target_lang}. \
 You will be provided with a source text and its translation and your goal is to improve the translation."
     prompt = f"""Your task is to carefully read a source text and a translation from {source_lang} to {target_lang}, and then give constructive criticism and helpful suggestions to improve the translation. \
 The final style and tone of the translation should match the style of {target_lang} colloquially spoken in {country}.
@@ -301,10 +344,11 @@ When writing suggestions, pay attention to whether there are ways to improve the
 Write a list of specific, helpful and constructive suggestions for improving the translation.
 Each suggestion should address one specific part of the translation.
 Output only the suggestions and nothing else."""
-    return get_completion(prompt, system_message=system_message, model=model)
+    return get_completion(prompt, system_message=system_message, model=model, temperature=selected_temperature)
 
 def one_chunk_improve_translation(model, source_text, translation_1, reflection):
-    system_message = f"You are an expert linguist, specializing in translation editing from {source_lang} to {target_lang}."
+    system_message = f"{selected_prompt_template} \
+    You are an expert linguist, specializing in translation editing from {source_lang} to {target_lang}."
     prompt = f"""Your task is to carefully read, then edit, a translation from {source_lang} to {target_lang}, taking into
 account a list of expert suggestions and constructive criticisms.
 
@@ -339,7 +383,7 @@ Provide your improved translation as a continuous text, without any additional f
     # Complete the prompt
     prompt += """Provide your improved translation as a continuous text, without any additional formatting or labels."""
 
-    return get_completion(prompt, system_message, model=model)
+    return get_completion(prompt, system_message, model=model, temperature=selected_temperature)
 
 def one_chunk_translate_text(model, source_text):
     try:
@@ -389,7 +433,7 @@ def perform_translation():
     try:
         with st.spinner("Translating... This may take a moment."):
             # 执行完整文本的翻译
-            full_translation_result = one_chunk_translate_text("gpt-4o-mini", source_text)
+            full_translation_result = one_chunk_translate_text(MODEL_NAME, source_text)
             
             if full_translation_result is None:
                 st.error("Full text translation failed. Please try again.")
