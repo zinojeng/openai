@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import os
 from litellm import completion
 import PyPDF2
@@ -143,15 +144,15 @@ selected_translation_mode = st.selectbox(
 
 # 設置不同模式的 prompts 和 temperature
 prompts = {
-    "Standard": {"prompt": "Translate the following text with standard fluency: ", "temperature": 0.5},
-    "Fluency": {"prompt": "Translate the following text, ensuring high fluency and readability: ", "temperature": 0.7},
-    "Natural": {"prompt": "Translate the following text in a natural and conversational tone: ", "temperature": 0.9},
-    "Formal": {"prompt": "Translate the following text in a formal and professional tone: ", "temperature": 0.3},
-    "Academic": {"prompt": "Translate the following text in an academic and scholarly style: ", "temperature": 0.2},
-    "Simple": {"prompt": "Translate the following text using simple and clear language: ", "temperature": 0.5},
-    "Creative": {"prompt": "Translate the following text with a creative and engaging style: ", "temperature": 1.0},
-    "Expand": {"prompt": "Translate the following text, expanding on ideas where necessary: ", "temperature": 0.8},
-    "Shorten": {"prompt": "Translate the following text, shortening the content where possible: ", "temperature": 0.5}
+    "Standard": {"prompt": "Please provide a translation of the following text with standard fluency and accuracy, maintaining the original meaning: ", "temperature": 0.5},
+    "Fluency": {"prompt": "Please translate the following text, ensuring it is highly fluent, coherent, and easy to read, while preserving the original intent: ", "temperature": 0.7},
+    "Natural": {"prompt": "Please translate the following text in a natural, conversational tone that sounds like everyday speech: ", "temperature": 0.9},
+    "Formal": {"prompt": "Please translate the following text in a formal and professional manner, suitable for business or official contexts: ", "temperature": 0.3},
+    "Academic": {"prompt": "Please translate the following text in an academic and scholarly style, appropriate for research papers or academic articles: ", "temperature": 0.2},
+    "Simple": {"prompt": "Please translate the following text using simple, clear, and straightforward language that is easy to understand: ", "temperature": 0.5},
+    "Creative": {"prompt": "Please translate the following text with a creative and engaging style, adding flair and originality while maintaining the core message: ", "temperature": 1.0},
+    "Expand": {"prompt": "Please translate the following text, expanding on ideas where necessary to provide additional context and detail: ", "temperature": 0.8},
+    "Shorten": {"prompt": "Please translate the following text, shortening the content where possible while retaining the essential information: ", "temperature": 0.5}
 }
 
 # 根據選擇的模式設置 prompt 和 temperature
@@ -470,6 +471,8 @@ def perform_translation():
             st.subheader("Token Usage and Cost Estimation")
             st.write(f"Total tokens used: {total_tokens}")
             st.write(f"Estimated cost: NTD {estimated_cost:.3f}")
+            total_characters = len(source_text)
+            st.write(f"Total characters in source text: {total_characters}")
             st.write(f"Model: {MODEL_NAME}: US{INPUT_COST_PER_1K_TOKENS}/US{OUTPUT_COST_PER_1K_TOKENS} per 1K tokens for batch API input/output, respectively")
 
         st.success("Translation completed!")
@@ -501,3 +504,26 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+#在最後嵌入 JavaScript SDK 代碼
+components.html(
+    """
+    <script src="https://sf-cdn.coze.com/obj/unpkg-va/flow-platform/chat-app-sdk/0.1.0-beta.5/libs/oversea/index.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            new CozeWebSDK.WebChatClient({
+                config: {
+                    bot_id: '7408278430665752583',
+                },
+                componentProps: {
+                    title: 'Gestational Diabetes Care',
+                    icon: 'https://www.icareweight.com/wp-content/uploads/2024/08/images-5-removebg-preview.png', // 新的 icon URL
+                },
+            });
+        });
+    </script>
+    """,
+    height=600
+)
+

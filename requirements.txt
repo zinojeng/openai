@@ -10,3 +10,5 @@ diff-match-patch
 openai
 litellm
 httpx
+urllib3
+certifi

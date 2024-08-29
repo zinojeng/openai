@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import os
 from litellm import completion
 import PyPDF2
@@ -299,11 +300,14 @@ def one_chunk_translate_text(model, source_text):
         total_tokens = input_tokens + output_tokens
         estimated_cost = estimate_cost(input_tokens, output_tokens)
 
+
         st.subheader("Token Usage and Cost Estimation")
         st.write(f"Total tokens used: {total_tokens}")
         st.write(f"Input tokens: {input_tokens}")
         st.write(f"Output tokens: {output_tokens}")
         st.write(f"Estimated cost: NTD {estimated_cost:.2f}")
+        total_characters = len(source_text)
+        st.write(f"Total characters in source text: {total_characters}")
 
         return {
             "initial_translation": translation_1,
@@ -312,7 +316,8 @@ def one_chunk_translate_text(model, source_text):
             "total_tokens": total_tokens,
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
-            "estimated_cost": estimated_cost
+            "estimated_cost": estimated_cost,
+            "total_characters": total_characters
         }
     except Exception as e:
         st.error(f"An error occurred during translation processing: {str(e)}")
@@ -357,3 +362,28 @@ Estimated Cost: NTD {result['estimated_cost']:.2f}
 if st.button("Translate"):
     perform_translation()
     st.info("Execution finished")
+
+
+    # 使用 components.html 嵌入 JavaScript SDK 代碼
+
+#在最後嵌入 JavaScript SDK 代碼
+components.html(
+    """
+    <script src="https://sf-cdn.coze.com/obj/unpkg-va/flow-platform/chat-app-sdk/0.1.0-beta.5/libs/oversea/index.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            new CozeWebSDK.WebChatClient({
+                config: {
+                    bot_id: '7408278430665752583',
+                },
+                componentProps: {
+                    title: 'Gestational Diabetes Care',
+                    icon: 'https://www.icareweight.com/wp-content/uploads/2024/08/images-5-removebg-preview.png', // 新的 icon URL
+                },
+            });
+        });
+    </script>
+    """,
+    height=600
+)
+
