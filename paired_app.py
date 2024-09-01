@@ -483,7 +483,8 @@ def perform_translation():
         result_text += f"改善後譯文 (Full Text):\n{full_translation_result['improved_translation']}\n\n"
         # result_text += "Sentence-by-Sentence Translation:\n\n"
 
-        result_text += f"\nEstimated Cost: NTD {estimated_cost:.3f}"
+        result_text += f"\nEstimated Cost: NTD {estimated_cost:.3f}\n"
+        result_text += f"Total characters in source text: {total_characters}\n"
 
         st.download_button(
             label="Download Translation Results",
