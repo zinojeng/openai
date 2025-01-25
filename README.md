@@ -82,11 +82,33 @@ Translation Agent 是一個基於大型語言模型的翻譯工具，採用獨�
 
 ## 安裝
 
-bash
-git clone [repository-url]
-cd translation-agent
+### 1. 複製專案
+```bash
+git clone https://github.com/zinojeng/openai.git
+cd openai
+```
+
+### 2. 安裝依賴套件
+```bash
 pip install -r requirements.txt
-streamlit run openai/paired_app.py
+```
+
+### 3. 啟動應用程式
+```bash
+streamlit run paired_app.py
+```
+
+### 必要套件
+```text
+streamlit
+openai
+tiktoken
+nltk
+PyPDF2
+python-docx
+diff-match-patch
+httpx
+```
 
 ## 注意事項
 
