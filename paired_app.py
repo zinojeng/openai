@@ -9,6 +9,7 @@ import nltk
 import ssl
 import diff_match_patch as dmp_module
 from typing import List, Tuple
+import requests  # 添加這行
 
 # SSL and NLTK setup
 try:
@@ -36,46 +37,71 @@ hide_github_icon = """
 st.write(hide_github_icon, unsafe_allow_html=True)
 
 
-# Sidebar for API key input
-st.sidebar.title("Configuration")
-openai_api_key = st.sidebar.text_input(
-    label="Enter your OpenAI API Key:",
-    type='password',
-    placeholder="Ex: sk-2twmA88un4...",
-    help="You can get your API key from https://platform.openai.com/account/api-keys/"
-)
-
-if openai_api_key:
-    os.environ["OPENAI_API_KEY"] = openai_api_key
-
-
 # 常量定义
 USD_TO_NTD_RATE = 30
 
 # Sidebar for model selection
 model_options = {
-    "gpt-4o-mini": {"input_cost": 0.075, "output_cost": 0.300},
-    "gpt-4o": {"input_cost": 2.5, "output_cost": 7.5},
-    "GPT-3.5 Turbo": {"input_cost": 0.25, "output_cost": 0.75}
+    "gpt-4o-mini": {"input_cost": 0.075, "output_cost": 0.300, "model_name": "gpt-4o-mini"},
+    "gpt-4o": {"input_cost": 2.5, "output_cost": 7.5, "model_name": "gpt-4o"},
+    "GPT-3.5 Turbo": {"input_cost": 0.25, "output_cost": 0.75, "model_name": "gpt-3.5-turbo"},
+    "deepseek-chat": {
+        "input_cost": 0.015, 
+        "output_cost": 0.06,
+        "model_name": "deepseek-chat"
+    },
+    "deepseek-reasoner": {
+        "input_cost": 0.03, 
+        "output_cost": 0.12,
+        "model_name": "deepseek-reasoner"
+    }
 }
 
+# Sidebar configuration
+st.sidebar.title("Configuration")
+
+# Model selection
 selected_model = st.sidebar.selectbox(
     "Select Translation Model:",
     list(model_options.keys()),
     help=(
-        "Batch input/output cost:\n"
+        "Batch input/output cost per 1M tokens (USD):\n"
         "gpt-4o: 2.5/7.5\n"
-        "gpt-4o-mini: 0.075/0.3\n"
+        "gpt-4o-mini: 0.075/0.3\n" 
         "gpt-3.5-turbo: 0.25/0.75\n"
+        "deepseek-chat: 0.015/0.06\n"
+        "deepseek-reasoner: 0.03/0.12"
     )
 )
 
-# 根据所选模型重定变量
+# Set MODEL_NAME after selection
 MODEL_NAME = selected_model
-INPUT_COST_PER_1K_TOKENS = model_options[selected_model]["input_cost"]
-OUTPUT_COST_PER_1K_TOKENS = model_options[selected_model]["output_cost"]
 
-# 计算价格
+# API key input based on selected model
+if MODEL_NAME.startswith("deepseek"):
+    deepseek_api_key = st.sidebar.text_input(
+        label="DeepSeek API Key:",
+        type='password',
+        placeholder="sk-...",
+        help="Get from DeepSeek platform"
+    )
+    if deepseek_api_key:
+        os.environ["DEEPSEEK_API_KEY"] = deepseek_api_key
+else:
+    openai_api_key = st.sidebar.text_input(
+        label="OpenAI API Key:",
+        type='password',
+        placeholder="sk-...",
+        help="Get from https://platform.openai.com/account/api-keys"
+    )
+    if openai_api_key:
+        os.environ["OPENAI_API_KEY"] = openai_api_key
+
+# Set costs after model selection
+INPUT_COST_PER_1K_TOKENS = model_options[MODEL_NAME]["input_cost"]
+OUTPUT_COST_PER_1K_TOKENS = model_options[MODEL_NAME]["output_cost"]
+
+# Calculate prices
 input_cost_ntd = INPUT_COST_PER_1K_TOKENS * USD_TO_NTD_RATE
 output_cost_ntd = OUTPUT_COST_PER_1K_TOKENS * USD_TO_NTD_RATE
 
@@ -280,15 +306,21 @@ else:  # Enter Text
 
 
 def estimate_token_count(text):
-    encoding = tiktoken.encoding_for_model(MODEL_NAME)
-    return len(encoding.encode(text))
+    try:
+        model_name = model_options[MODEL_NAME]["model_name"]
+        encoding = tiktoken.encoding_for_model(model_name)
+        return len(encoding.encode(text))
+    except KeyError:
+        # Fallback to a default encoding for models not supported by tiktoken
+        encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
+        return len(encoding.encode(text))
 
 
 def estimate_cost(input_tokens, output_tokens):
-    input_cost = (input_tokens / 1_000_000) * 0.075
-    output_cost = (output_tokens / 1_000_000) * 0.3
+    input_cost = (input_tokens / 1_000_000) * model_options[MODEL_NAME]["input_cost"]
+    output_cost = (output_tokens / 1_000_000) * model_options[MODEL_NAME]["output_cost"]
     total_cost_usd = input_cost + output_cost
-    return total_cost_usd * 30  # Assuming 1 USD = 30 NTD
+    return total_cost_usd * USD_TO_NTD_RATE
 
 
 # Translation functions
@@ -297,8 +329,55 @@ def get_completion(user_prompt, system_message="You are a helpful assistant.", m
         {"role": "system", "content": system_message},
         {"role": "user", "content": user_prompt},
     ]
-    response = completion(model=model, messages=messages, temperature=temperature)
-    return response["choices"][0]["message"]["content"]
+    
+    # 根據模型選擇不同的 API endpoint 和設定
+    model_name = model_options[model]["model_name"]
+    
+    try:
+        if model.startswith("deepseek"):
+            if not deepseek_api_key:
+                raise ValueError("DeepSeek API key is required for DeepSeek models")
+            
+            # 使用 OpenAI SDK 調用 DeepSeek API
+            from openai import OpenAI
+            import httpx
+            
+            # 創建自定義的 httpx client，不使用代理
+            http_client = httpx.Client()
+            
+            client = OpenAI(
+                api_key=deepseek_api_key,
+                base_url="https://api.deepseek.com/v1",
+                http_client=http_client
+            )
+            
+            try:
+                response = client.chat.completions.create(
+                    model=model_name,
+                    messages=messages,
+                    temperature=min(temperature, 1.3)  # DeepSeek 最大支援 1.3
+                )
+                
+                return response.choices[0].message.content
+            finally:
+                http_client.close()
+            
+        else:
+            if not openai_api_key:
+                raise ValueError("OpenAI API key is required for OpenAI models")
+            os.environ["OPENAI_API_BASE"] = "https://api.openai.com/v1"
+            os.environ["OPENAI_API_KEY"] = openai_api_key
+            
+            response = completion(
+                model=model_name,
+                messages=messages, 
+                temperature=temperature
+            )
+            return response["choices"][0]["message"]["content"]
+            
+    except Exception as e:
+        st.error(f"Error calling API: {str(e)}")
+        raise e
 
 def one_chunk_initial_translation(model, source_text):
     system_message = f"You are an expert medical translator, specializing in translating medical instructions and educational materials from {source_lang} to {target_lang}."
@@ -423,8 +502,14 @@ def compare_texts(source_text, improved_translation):
 
  # 修改 perform_translation 函数
 def perform_translation():
-    if not openai_api_key:
+    # 檢查 API key
+    selected_provider = "openai" if not MODEL_NAME.startswith("deepseek") else "deepseek"
+    
+    if selected_provider == "openai" and not openai_api_key:
         st.error("Please enter your OpenAI API key in the sidebar.")
+        return
+    elif selected_provider == "deepseek" and not deepseek_api_key:
+        st.error("Please enter your DeepSeek API key in the sidebar.")
         return
     
     if not source_text:
