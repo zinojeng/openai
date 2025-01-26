@@ -10,6 +10,7 @@ import ssl
 import diff_match_patch as dmp_module
 from typing import List, Tuple
 import requests  # 添加這行
+from datetime import datetime
 
 # SSL and NLTK setup
 try:
@@ -588,8 +589,18 @@ def main():
         perform_translation()
         st.info("Execution finished")
 
+# 添加心跳檢測路由
+@st.cache_data(ttl=60)
+def heartbeat():
+    return {"status": "alive", "timestamp": datetime.now().isoformat()}
+
 if __name__ == "__main__":
-    main()
+    # 添加路由處理
+    if "heartbeat" in st.experimental_get_query_params():
+        st.json(heartbeat())
+        st.stop()
+    
+    main()  # 原有的主程序
 
 
 #在最後嵌入 JavaScript SDK 代碼
