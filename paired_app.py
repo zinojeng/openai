@@ -595,8 +595,8 @@ def heartbeat():
     return {"status": "alive", "timestamp": datetime.now().isoformat()}
 
 if __name__ == "__main__":
-    # 添加路由處理
-    if "heartbeat" in st.experimental_get_query_params():
+    # 使用新的 st.query_params 替換 st.experimental_get_query_params
+    if "heartbeat" in st.query_params:
         st.json(heartbeat())
         st.stop()
     
