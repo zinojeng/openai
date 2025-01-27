@@ -11,6 +11,8 @@ import diff_match_patch as dmp_module
 from typing import List, Tuple
 import requests  # 添加這行
 from datetime import datetime
+import time
+import threading
 
 # SSL and NLTK setup
 try:
@@ -593,6 +595,27 @@ def main():
 @st.cache_data(ttl=60)
 def heartbeat():
     return {"status": "alive", "timestamp": datetime.now().isoformat()}
+
+# 添加自我喚醒功能
+def keep_alive():
+    while True:
+        try:
+            response = requests.get("https://translationagent.streamlit.app")
+            st.session_state['last_ping'] = time.time()
+            time.sleep(1200)  # 每20分鐘喚醒一次
+        except Exception as e:
+            print(f"Keep-alive error: {e}")
+            time.sleep(60)  # 如果出錯，1分鐘後重試
+
+# 在主程式開始時啟動自我喚醒線程
+if 'keep_alive_thread' not in st.session_state:
+    keep_alive_thread = threading.Thread(target=keep_alive, daemon=True)
+    keep_alive_thread.start()
+    st.session_state['keep_alive_thread'] = keep_alive_thread
+
+# 顯示最後喚醒時間（可選）
+if 'last_ping' in st.session_state:
+    st.sidebar.text(f"Last active: {time.ctime(st.session_state['last_ping'])}")
 
 if __name__ == "__main__":
     # 使用新的 st.query_params 替換 st.experimental_get_query_params
